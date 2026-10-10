@@ -68,13 +68,17 @@ assert(![...values.values()].some(value => value.includes(token)), 'No credentia
 // Run actual community components with hook state and controllable HTTP responses.
 const jsx = (type, props) => ({type, props: props || {}}), hooks = []; let index = 0;
 const React = {useEffect() {}, useState: initial => {const slot = index++; if (!(slot in hooks)) hooks[slot] = typeof initial === 'function' ? initial() : initial; return [hooks[slot], value => hooks[slot] = value];}, useRef: initial => {const slot = index++; if (!(slot in hooks)) hooks[slot] = {current: initial}; return hooks[slot];}};
-Object.assign(c, {getCommunityReact: () => React, getCommunityJsx: () => ({jsx, jsxs: jsx}), CommunityButton: 'Button', initCommunityButton() {}, fetch: async () => new Response(catalogText)});
+const opened = [];
+Object.assign(c, {getCommunityReact: () => React, getCommunityJsx: () => ({jsx, jsxs: jsx}), CommunityButton: 'Button', initCommunityButton() {}, CommunityHost: {dispatchMessage: (type, payload) => opened.push({type, payload})}, fetch: async () => new Response(catalogText)});
 vm.runInContext(read('jarvis-community-library.js') + '\nglobalThis.Library=CommunityLibrary;globalThis.Publish=CommunityPublishDialog;', c);
 const flatten = value => !value ? [] : Array.isArray(value) ? value.flatMap(flatten) : typeof value !== 'object' ? [] : [value, ...flatten(value.props.children)];
 let tree;
 function renderLibrary() {index = 0; tree = c.Library({library: a.readVisualLibrary(storage), i18n: {language: 'en', t: (key, values) => values?.name ? `${key}:${values.name}` : key}, Dialog: 'Dialog', Preview: 'Preview'});}
 const button = label => {const node = flatten(tree).find(node => node.type === 'Button' && (node.props.children === label || node.props['aria-label'] === label)); assert(node, label); return node;};
 renderLibrary(); assert.equal(flatten(tree).filter(node => node.props['data-kliment-community-card']).length, 3);
+flatten(tree).find(node => node.type === 'a').props.onClick({preventDefault() {}});
+assert.equal(opened[0].type, 'open-in-browser'); assert.equal(opened[0].payload.useExternalBrowser, true);
+assert(opened[0].payload.url.startsWith('https://github.com/Klim-git/codex-mods-lab/'));
 flatten(tree).find(node => node.props.type === 'search').props.onChange({target: {value: 'violet'}}); renderLibrary(); assert.equal(flatten(tree).filter(node => node.props['data-kliment-community-card']).length, 1);
 button('communityPreviewNamed:Violet').props.onClick(); renderLibrary(); assert(flatten(tree).some(node => node.type === 'Preview'));
 button('visualInstall').props.onClick(); renderLibrary(); assert(a.readVisualLibrary(storage).mods.some(item => item.id === 'community-violet'));
@@ -83,7 +87,13 @@ c.fetch = async () => {throw Error('Offline');}; await button('communityRefresh'
 hooks.length = 0; let closed = 0;
 function renderPublish() {index = 0; tree = c.Publish({mod: userMod, i18n: {t: key => key}, onClose: () => closed++, Dialog: 'Dialog', Preview: 'Preview'});}
 renderPublish(); assert.equal(button('communitySend').props.disabled, true);
+const submissionLink = () => flatten(tree).find(node => node.type === 'a' && node.props.children === 'communityPublishGithub');
+let prevented = 0; const openingCount = opened.length;
+submissionLink().props.onClick({preventDefault() {prevented++;}});
+assert.equal(prevented, 1); assert.equal(opened.length, openingCount, 'No browser navigation without consent');
 flatten(tree).find(node => node.props.type === 'checkbox').props.onChange({target: {checked: true}});
+renderPublish(); submissionLink().props.onClick({preventDefault() {prevented++;}});
+assert.equal(opened.length, openingCount + 1); assert.equal(opened.at(-1).payload.url, a.communitySubmissionUrl(userMod));
 flatten(tree).find(node => node.props.type === 'password').props.onChange({target: {value: token}});
 c.fetch = async () => new Response(JSON.stringify({number: 9}), {status: 201}); renderPublish(); await button('communitySend').props.onClick(); renderPublish();
 assert(flatten(tree).some(node => node.props.children === 'communitySubmitted')); assert(!flatten(tree).some(node => node.props.value === token));
