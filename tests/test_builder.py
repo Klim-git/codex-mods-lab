@@ -25,6 +25,14 @@ def make_archive(path):
 
 
 class BuilderTests(unittest.TestCase):
+    def test_community_csp_preserves_existing_restrictions(self):
+        source = "default-src &#39;none&#39;; connect-src &#39;self&#39; blob: https://chatgpt.com; script-src &#39;self&#39;"
+        patched = builder.patch_community_csp(source)
+        self.assertIn('https://raw.githubusercontent.com https://api.github.com', patched)
+        self.assertEqual(patched.replace(' https://raw.githubusercontent.com https://api.github.com', ''), source)
+        with self.assertRaises(RuntimeError):
+            builder.patch_community_csp('unexpected policy')
+
     def test_preserves_original_payload_and_metadata(self):
         with tempfile.TemporaryDirectory() as directory:
             source, target = pathlib.Path(directory) / 'source.asar', pathlib.Path(directory) / 'copy.asar'

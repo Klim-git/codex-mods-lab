@@ -83,4 +83,11 @@ const routeContext = vm.createContext({jarvisModsActive: true, x: 'general-setti
 const select = vm.runInContext('(' + source.slice(callbackStart, callbackEnd) + ')', routeContext);
 select('general-settings'); assert.equal(navigated, '/settings/general-settings');
 
-console.log('PASS: installed native settings navigation, search, and deep links.');
+// The visual runtime is mounted alongside the rail and targets native message wrappers.
+const initial = fs.readFileSync(new URL('.mods-lab/preview/app-initial.patched.js', root), 'utf8');
+assert(initial.includes('(0,O2.jsx)(JarvisVisualStylesRoot,{},`kliment-visual-styles`)'));
+for (const filename of ['local-conversation-thread-70abb87ab9c8', 'local-conversation-turn-dd4feee2fc9e', 'chatgpt-conversation-turn-content-dc8fb988ef91']) {
+  const native = fs.readFileSync(new URL(`.mods-lab/preview/${filename}.patched.js`, root), 'utf8');
+  assert(native.includes('"data-kliment-message-role":'), `Missing visual wrapper in ${filename}`);
+}
+console.log('PASS: native settings navigation/search/deep links, visual runtime mount and local/ChatGPT message selectors.');

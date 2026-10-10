@@ -30,7 +30,7 @@ function makePanel(appLocale = 'ru-RU') {
   const c = vm.createContext({window: {localStorage: storage, dispatchEvent: noop}, Event: class {}, getReact: () => React, getJsx: () => ({jsx, jsxs: jsx}),
     initToggle: noop, initRow: noop, initRows: noop, initButton: noop, initGroup: noop,
     getLocaleReact: () => React, useAppIntl: () => ({locale: appLocale}),
-    Toggle: 'Toggle', SettingsRow: 'Row', SettingsRows: 'Rows', SettingsGroup: Group, Button: 'Button', console});
+    Toggle: 'Toggle', SettingsRow: 'Row', SettingsRows: 'Rows', SettingsGroup: Group, Button: 'Button', VisualModsLibrary: 'VisualModsLibrary', console});
   vm.runInContext(moduleSource + '\nglobalThis.panel = JarvisModsPanel;globalThis.key = storageKey;', c);
   return {render: () => {currentHook = 0; return c.panel();}, key: c.key};
 }
@@ -124,7 +124,7 @@ assert.equal(control(card(tree), 'Порог предупреждения').prop
 button(card(tree), 'Сбросить настройки полосы контекста').props.onClick(); tree = panel.render();
 assert.equal(JSON.parse(saved.get(panel.key)).nextMod, 'Паспорт чата', 'Mod reset must not overwrite other stored preferences');
 assert.equal(JSON.parse(saved.get(panel.key)).showPlannedMods, false);
-assert(!JSON.stringify(tree).includes('Паспорт чата'));
+assert(!flatten(tree).some(n => n.props.children === 'Паспорт чата'), 'Legacy preferences must not appear as planned mod UI');
 const beforeLanguageChange = JSON.parse(saved.get(panel.key));
 control(tree, 'Язык').props.onChange({target: {value: 'en'}}); tree = panel.render();
 assert.equal(tree.props.lang, 'en');
