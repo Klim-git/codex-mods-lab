@@ -1,6 +1,6 @@
 # Verification notes
 
-Tested on Windows with application version **26.1007.21434**, Store package **26.1007.2314.0 x64**, on **2026-10-10**.
+Tested on Windows with application version **26.1007.21434**, Store package **26.1007.2314.0 x64**, on **2026-10-10–11**.
 
 ## Live UI checks on the original experiment copy
 
@@ -37,6 +37,16 @@ Live checks used a neutral local conversation. Rich attachments and live ChatGPT
 
 These checks describe the experiment used to develop the authored modules. Publication packaging verifies a fresh locally built archive. Private chats, profiles, raw diagnostics, and application bundles are not published.
 
+## Live functional-library checks
+
+- The isolated copy fetched the public version-2 catalog with six packages. The Functional filter showed Reply tools, Prompt templates and Chat navigation. The legacy visual-only catalog remains available to older copies.
+- Preview listed derived access descriptions, action labels, shortcut values and exact template text. Installed Reply tools and Prompt templates from GitHub; both started disabled. Enabling both retained the active Paper theme, context meter and existing bookmark.
+- In the neutral local demo chat, Focus input placed the caret in the native editor; Copy reply reported successful clipboard writing. Summarize appended the template after an existing test draft and updated the native input without sending a message.
+- Ctrl+Alt+Shift+E appended the Explain template without replacing the draft. Windows injected input can omit `KeyboardEvent.code`; a tested Latin/Russian letter fallback handles that case, while an available physical code takes priority.
+- Opened the functional settings from the card, changed Summarize to Summary and saved. Reopening the editor after the final rebuild retained Summary, both installed packages and their enabled states. Turning the master switch off removed the functional toolbar, context meter, bookmarks and visual styling in the chat; turning it back on restored the enabled selections.
+
+All live functional checks used authored starter packages and a neutral test draft. Live ChatGPT conversation actions and rich-message copy fidelity remain unverified. No generated template was sent to the assistant during these checks.
+
 ## Automated checks
 
 - Preferences: migration, validation, per-mod reset, persistence across remounts, and recovery when local storage is blocked or corrupt.
@@ -47,9 +57,10 @@ These checks describe the experiment used to develop the authored modules. Publi
 - Optional native integration: settings navigation/search/deep links, composer insertion, native message keys, local/ChatGPT older-history adapters, and launch profile guard.
 - Visual mods: strict portable package validation, bounds and injection rejection, imports disabled by default, duplicate protection, atomic save failures, separate storage, editor preview/cancel/save, export round-trip, importing copies, and runtime pause/corrupt-library fallback.
 - Community library: strict catalog and package validation, bounded downloads, fixed HTTPS destinations, offline cache retention, search, preview/install, duplicates without overwriting active mods, public submission parsing/approval, ID ownership collisions, token rejection/no persistence, and no automatic retries after an uncertain public write.
-- Full local copy verification: only nine original archive entries modified and eleven modules added; remaining metadata and the complete original payload preserved; executable changed only to refresh the archive header hash; original source archive unchanged. The additional original entry is the HTML CSP, allowing only the two GitHub connection origins needed by the community library.
+- Functional mods: strict declarative action schemas and text limits, rejecting code/shell/URL hooks, compact export near the package limit, mixed and legacy catalogs, separate storage, combined 50-package limit before writes, concurrent enable, rollback/undo, cross-kind ID collisions, reviewed publication, editor cancel/save/export, scoped response copy/navigation, draft preservation, shortcut matching and conflicts, and paused/corrupt-library fallback.
+- Full local copy verification: only nine original archive entries modified and fourteen modules added; remaining metadata and the complete original payload preserved; executable changed only to refresh the archive header hash; original source archive unchanged. The additional original entry is the HTML CSP, allowing only the two GitHub connection origins needed by the community library.
 
-The rail helper is appended to an existing bundle. Added modules include localization and three visual-library modules (storage, editor, runtime styles). Native integration also checks that the host's memoized Settings navigation and search refresh when the mod language changes. Full verification does not inspect chats or authentication storage.
+The rail helper is appended to an existing bundle. Added modules include localization, the visual and community libraries, functional storage/runtime and the shared package adapter. Native integration checks that both the context meter and functional toolbar mount alongside the original composer content, and that the host's memoized Settings navigation and search refresh when the mod language changes. Full verification does not inspect chats or authentication storage.
 
 ## Remaining coverage
 

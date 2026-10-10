@@ -2,6 +2,8 @@
 
 This foundation runs inside the isolated Windows test copy. Open **Settings → Mods**.
 
+The same library also accepts [functional mods](FUNCTIONAL-MODS.md). This document describes the existing visual format, which stays compatible. One visual mod and several functional packages can be enabled together; their saved libraries are separate.
+
 - **Installed** contains the built-in context bar and bookmarks, plus your visual mods. Import packages prepared by an AI assistant, then edit, enable, disable, export, share or remove a custom mod from its card. Removal offers an Undo button until you leave the page. Only one visual mod is active at a time; selecting another keeps all packages installed.
 - **Edit** on a custom card opens appearance settings with a live preview: message backgrounds, an accent on user messages and the context meter, text size, corner radius, and maximum message width. Emerald, Ocean, Violet and Paper presets are included. The sample conversation updates immediately. **Save** stores the package; **Save and apply** also selects it. **Cancel** discards the draft. The master switch must be on for a selected mod to affect chats. There is no separate Create button or editor tab.
 - **Import mod** accepts a local `.codexmod.json` file or pasted package JSON. Review the name, author and preview, then install. Imports start disabled. If the ID is already installed, **Install a copy** assigns a new ID and retains the original.
