@@ -4,7 +4,8 @@ import hashlib
 import json
 import pathlib
 from asar_util import Asar
-from build_copy import ROOT, SUPPORTED_ASAR_SHA256, file_hash, header_hash
+from build_copy import ROOT, file_hash, header_hash
+from adapters import select_adapter
 
 
 def range_hash(path, offset, length):
@@ -25,8 +26,11 @@ def verify(output):
     source_root = pathlib.Path(manifest['source'])
     source = Asar(source_root / 'resources/app.asar')
     target = Asar(output / 'app/resources/app.asar')
-    if file_hash(source.path) != SUPPORTED_ASAR_SHA256:
+    source_hash = file_hash(source.path)
+    if source_hash != manifest['sourceSha256']:
         raise RuntimeError('The original archive changed; the saved build no longer matches it.')
+    adapter = select_adapter(manifest['sourceVersion'], source_hash)
+    assert manifest['adapter'] == {'id': adapter.ADAPTER_ID, 'apiVersion': adapter.API_VERSION, 'appVersion': adapter.SUPPORTED_VERSION}
     original, modified = dict(source.files()), dict(target.files())
     new_modules = set(manifest['newModules'])
     allowed = set(manifest['changes']) | new_modules
@@ -60,10 +64,12 @@ def verify(output):
     assert 'Codex-Mods-Lab' in (output / 'app/resources/owl-app.ini').read_text(encoding='utf-8')
     assert manifest['isolation']['credentialsCopied'] is False
     assert manifest['isolation']['updatesEnabled'] is False
+    assert (output / 'Launch-Safe-Mode.cmd').read_bytes() == (ROOT / 'scripts/Launch-Safe-Mode.cmd').read_bytes()
+    assert manifest['safeMode']['preferencesOverwritten'] is False
     return {'status': 'passed', 'originalEntries': len(original),
             'modifiedEntries': len(manifest['changes']), 'addedModules': len(new_modules),
             'originalPayloadPreserved': True, 'sourceArchiveSha256': file_hash(source.path),
-            'copyArchiveSha256': file_hash(target.path)}
+            'copyArchiveSha256': file_hash(target.path), 'adapter': adapter.ADAPTER_ID, 'safeModeLauncher': True}
 
 
 if __name__ == '__main__':

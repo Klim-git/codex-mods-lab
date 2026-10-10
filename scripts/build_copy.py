@@ -4,90 +4,14 @@ from asar_util import Asar
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PROJECT = 'codex-mods-lab'
-SUPPORTED_VERSION = '26.1007.21434'
-SUPPORTED_ASAR_SHA256 = 'c5fdef328cfa2ad9095786f9c3a7aaa447e68834d31299d6ef2592da02029038'
-LAUNCH_GUARD = "// Kliment Mods Lab: refuse a launch that could use the primary profile.\n{const modsPath=require('node:path');const modsRoot=modsPath.resolve(process.resourcesPath,'../..');\nconst modsExpectedUserData=modsPath.join(modsRoot,'app-data');const modsExpectedHome=modsPath.join(modsRoot,'codex-home');\nif(!process.env.KLIMENT_MODS_LAB_ROOT||modsPath.resolve(process.env.KLIMENT_MODS_LAB_ROOT)!==modsRoot||\n!process.env.CODEX_ELECTRON_USER_DATA_PATH||modsPath.resolve(process.env.CODEX_ELECTRON_USER_DATA_PATH)!==modsExpectedUserData||\n!process.env.CODEX_HOME||modsPath.resolve(process.env.CODEX_HOME)!==modsExpectedHome){\nprocess.stderr.write('Use Launch-Mods.ps1 to start the isolated Mods Lab copy.\\n');process.exit(78);}}\n// Label windows of this experiment so they are distinguishable from the installed app.\nrequire('electron').app.on('browser-window-created',(_modsEvent,modsWindow)=>{\nmodsWindow.on('page-title-updated',(modsEvent,modsTitle)=>{const modsSuffix=' · Моды (тест)';\nif(!modsTitle.endsWith(modsSuffix)){modsEvent.preventDefault();modsWindow.setTitle(modsTitle+modsSuffix);}});\nmodsWindow.setTitle('Моды · тестовая копия');});\n"
-SETTINGS = 'webview/assets/settings-page-6c4c55bd9144.js'
-BOOTSTRAP = '.vite/build/bootstrap-487kJHw_.js'
-ENTRY = '.vite/build/early-bootstrap.js'
-INITIAL = 'webview/assets/app-initial-b8e1c8014bb4.js'
-LOCAL_THREAD = 'webview/assets/local-conversation-thread-70abb87ab9c8.js'
-LOCAL_TURN = 'webview/assets/local-conversation-turn-dd4feee2fc9e.js'
-CHATGPT_PAGE = 'webview/assets/chatgpt-conversation-page-d6ceb517cb3b.js'
-CHATGPT_TURN = 'webview/assets/chatgpt-conversation-turn-content-dc8fb988ef91.js'
+from adapters import select_adapter, current_adapter, ADAPTERS
+from adapters.codex_26_1007_21434 import patch_community_csp, replace_once
+SUPPORTED_VERSION = current_adapter.SUPPORTED_VERSION
+SUPPORTED_ASAR_SHA256 = current_adapter.SUPPORTED_ASAR_SHA256
 MODULE = 'webview/assets/jarvis-mods-native.js'
 MODULES = [MODULE, 'webview/assets/jarvis-mods-state.js', 'webview/assets/jarvis-context-bar.js', 'webview/assets/jarvis-bookmarks-state.js', 'webview/assets/jarvis-bookmarks.js', 'webview/assets/jarvis-mods-i18n.js', 'webview/assets/jarvis-visual-mods-state.js', 'webview/assets/jarvis-visual-mods-library.js', 'webview/assets/jarvis-visual-mods-runtime.js', 'webview/assets/jarvis-community-state.js', 'webview/assets/jarvis-community-library.js']
-MODULES += ['webview/assets/jarvis-functional-mods-state.js', 'webview/assets/jarvis-mod-packages.js', 'webview/assets/jarvis-functional-mods-runtime.js']
-
-def patch_community_csp(source):
-    # Allow only the two fixed community endpoints in the isolated copy.
-    return replace_once(source, 'connect-src &#39;self&#39; blob:',
-        'connect-src &#39;self&#39; blob: https://raw.githubusercontent.com https://api.github.com')
-
-def replace_once(source, old, new):
-    if source.count(old) != 1: raise RuntimeError('Patch does not match this version: '+old[:100])
-    return source.replace(old, new)
-
-def patch_settings(source):
-    source = replace_once(source, 'import{n as e,o as t,t as n}', "import{JarvisModsPanel}from'./jarvis-mods-native.js';\nimport{useModsLanguage,modText}from'./jarvis-mods-i18n.js';\nimport{n as e,o as t,t as n}")
-    source = replace_once(source, 'let y=v,b=ne(f).kind===`local`', 'let jarvisPanelLanguage=useModsLanguage();let jarvisModsActive=u.pathname===`/settings/general-settings`&&new URLSearchParams(u.search).get(`jarvis-mods`)===`1`;let y=v,b=ne(f).kind===`local`')
-    source = replace_once(source, 'let Fe;e[72]', 'if(jarvisModsActive)Pe=(0,$.jsx)(At,{title:modText(jarvisPanelLanguage,`mods`),children:(0,$.jsx)(JarvisModsPanel,{})});let Fe;e[72]')
-    source = replace_once(source, 'let Ke=h==null?We:`plugins-settings`', 'let Ke=jarvisModsActive?`kliment-mods`:h==null?We:`plugins-settings`')
-    # Use the existing plugin navigation callback so the normal pending-save guard stays active.
-    anchor = '}),null]},e.key)),t[65]=Ke'
-    button = '}),e.key===`integrations`&&C?(0,Q.jsx)(vt,{"aria-label":modText(jarvisLanguage,`mods`),label:modText(jarvisLanguage,`mods`),icon:(0,Q.jsx)(In,{}),isActive:a===`kliment-mods`,"data-settings-panel-slug":`kliment-mods`,onClick:()=>R({kind:`plugin`,path:`/settings/general-settings?jarvis-mods=1`}),weightClassName:`font-normal`}):null]},e.key)),t[65]=Ke'
-    source = replace_once(source, anchor, button)
-    source = replace_once(source, '...(n==null?void 0:F)?.map(Ir)??[],...b&&It(i,A)>0?', '...(n==null?void 0:F)?.map(Ir)??[],...n!=null&&N&&[`Моды`,`mods`].some(e=>It(e,A)>0)?[{id:`kliment-mods-native`,kind:`plugin`,label:modText(jarvisLanguage,`mods`),panelLabel:modText(jarvisLanguage,`mods`),path:`/settings/general-settings?jarvis-mods=1`,sectionSlug:`plugins-settings`}]:[],...b&&It(i,A)>0?')
-    # The compiled sidebar cache has no dependency on mod preferences. Reserve one
-    # slot to invalidate it when the resolved mod language changes.
-    source = replace_once(source, 'function Or(e){let t=(0,Jr.c)(149),{onSelectPlugin:n',
-        'function Or(e){let t=(0,Jr.c)(150),jarvisLanguage=useModsLanguage();if(t[149]!==jarvisLanguage){t.fill(Symbol.for(`react.memo_cache_sentinel`));t[149]=jarvisLanguage}let{onSelectPlugin:n')
-    source = replace_once(source, 'if(e===x&&!l&&h==null', 'if(!jarvisModsActive&&e===x&&!l&&h==null')
-    return source
-
-def patch_composer(source):
-    start = source.index('function cLt(')
-    end = source.index('function ', start + len('function cLt('))
-    composer = source[start:end]
-    composer = replace_once(composer, 'onDrop:_,children:n}),t[20]=n', 'onDrop:_,children:[(0,ZS.jsx)(JarvisContextBarRoot,{isDocument:V},`kliment-context-bar`),(0,ZS.jsx)(JarvisFunctionalActionsRoot,{isDocument:V},`kliment-functional-actions`),n]}),t[20]=n')
-    return "import{JarvisFunctionalActionsRoot}from'./jarvis-functional-mods-runtime.js';\nimport{JarvisContextBarRoot}from'./jarvis-context-bar.js';\n" + source[:start] + composer + source[end:]
-
-def patch_mods_rail(source):
-    source = replace_once(source, 'children:[z,B,V,H,k,A]}),t[90]', 'children:[z,B,V,H,k,A,(0,O2.jsx)(JarvisModsRailButton,{onOpenSidebarPopover:u},`kliment-mods-rail`),(0,O2.jsx)(JarvisVisualStylesRoot,{},`kliment-visual-styles`)]}),t[90]')
-    return "import{JarvisVisualStylesRoot}from'./jarvis-visual-mods-runtime.js';\nimport{useModsLanguage,modText}from'./jarvis-mods-i18n.js';\n" + source + '\n\n' + (ROOT/'src/jarvis-mods-rail.js').read_text(encoding='utf-8')
-
-def patch_local_thread(source):
-    source = replace_once(source, '"data-content-search-turn-key":s,"data-content-search-unit-key":g,children:y}', '"data-content-search-turn-key":s,"data-content-search-unit-key":g,children:[y,(0,Dk.jsx)(JarvisBookmarkMessageButton,{unitKey:g,turnKey:s,role:`assistant`,item:v},`kliment-bookmark`)]}')
-    source = replace_once(source, '"data-content-search-unit-key":d,children:f}', '"data-content-search-unit-key":d,children:[f,(0,Mk.jsx)(JarvisBookmarkMessageButton,{unitKey:d,turnKey:s,role:a.role,item:{text:u}},`kliment-bookmark`)]}')
-    start = source.index('function UA(')
-    end = source.index('function ', start + len('function UA('))
-    thread = source[start:end]
-    thread = replace_once(thread, 'return M!=null&&E(w.value.clientThreadId)', 'return(0,ej.jsx)(JarvisBookmarksSurface,{conversationKey:`local:${i}:${t}`,showLauncher:d!==!1,getContainer:()=>Mt.current,onNavigate:async bookmark=>{let turnKey=bookmark.turnKey,itemId=bookmarkItemId(bookmark);if(!fn.current.has(turnKey)){let preview=await Cn(turnKey);if(preview==null||!await hn.prepareMatchForNavigation({contextId:qt,domain:`conversation`,matchIndex:0,turnCursor:preview.turnCursor,turnKey,unitId:itemId}))throw Error(`Bookmark history unavailable`);}Gk(w,{conversationId:t,turnSearchKey:turnKey},!1);await lg();let api=Y.current;if(api==null)throw Error(`Bookmark navigation unavailable`);await api.scrollToKey(fn.current.get(turnKey)??turnKey,element=>findBookmarkTarget(element,bookmark.unitKey),{align:`top`});await lg();},children:M!=null&&E(w.value.clientThreadId)')
-    if not thread.endswith(']})}'):
-        raise RuntimeError('Unexpected local thread return')
-    thread = thread[:-1] + '},`local:${i}:${t}`)}'
-    source = source[:start] + thread + source[end:]
-    source = replace_once(source, '"data-content-search-unit-key":g,children:[y', '"data-content-search-unit-key":g,"data-kliment-message-role":`assistant`,children:[y')
-    source = replace_once(source, '"data-content-search-unit-key":d,children:[f', '"data-content-search-unit-key":d,"data-kliment-message-role":a.role,children:[f')
-    return "import{bookmarkItemId}from'./jarvis-bookmarks-state.js';\nimport{JarvisBookmarksSurface,JarvisBookmarkMessageButton,findBookmarkTarget}from'./jarvis-bookmarks.js';\n" + source
-
-def patch_local_turn(source):
-    source = replace_once(source, '"data-content-search-unit-key":sr(u,r),"data-local-conversation-user-anchor":i?!0:void 0,children:n}', '"data-content-search-unit-key":sr(u,r),"data-local-conversation-user-anchor":i?!0:void 0,children:[n,(0,Z.jsx)(JarvisBookmarkMessageButton,{unitKey:sr(u,r),turnKey:u,role:t.type===`user-message`?`user`:t.type===`assistant-message`?`assistant`:null,item:t},`kliment-bookmark`)]}')
-    source = replace_once(source, '"data-content-search-unit-key":i==null?void 0:sr(t,i),"data-local-conversation-user-anchor":a?!0:void 0,children:r}', '"data-content-search-unit-key":i==null?void 0:sr(t,i),"data-local-conversation-user-anchor":a?!0:void 0,children:[r,(0,$.jsx)(JarvisBookmarkMessageButton,{unitKey:i==null?null:sr(t,i),turnKey:t,role:n.type===`user-message`?`user`:n.type===`assistant-message`?`assistant`:null,item:n},`kliment-bookmark`)]}')
-    source = replace_once(source, '"data-content-search-unit-key":sr(u,r),', '"data-content-search-unit-key":sr(u,r),"data-kliment-message-role":t.type===`user-message`?`user`:t.type===`assistant-message`?`assistant`:void 0,')
-    source = replace_once(source, '"data-content-search-unit-key":i==null?void 0:sr(t,i),', '"data-content-search-unit-key":i==null?void 0:sr(t,i),"data-kliment-message-role":n.type===`user-message`?`user`:n.type===`assistant-message`?`assistant`:void 0,')
-    return "import{JarvisBookmarkMessageButton}from'./jarvis-bookmarks.js';\n" + source
-
-def patch_chatgpt_page(source):
-    source = replace_once(source, ':Et=t[185],Et}', ':Et=t[185],(0,$.jsx)(JarvisBookmarksSurface,{conversationKey:`chatgpt:${s}`,showLauncher:!h&&!m&&!xt,getContainer:()=>Ee.current,onNavigate:async bookmark=>{await Qe(bookmark.turnKey);let turn=Ne().find(entry=>entry.id===bookmark.turnKey);if(turn==null||U==null)throw Error(`Bookmark history unavailable`);await U.scrollToKey(turn.turnKey,element=>findBookmarkTarget(element,bookmark.unitKey),{align:`top`});await Eu();},children:Et},`chatgpt:${s}`)}')
-    return "import{JarvisBookmarksSurface,findBookmarkTarget}from'./jarvis-bookmarks.js';\n" + source
-
-def patch_chatgpt_turn(source):
-    source = replace_once(source, 'children:[null,(0,$.jsx)($.Fragment,{children:(0,$.jsx)(Dv,{...le})})]', 'children:[null,(0,$.jsx)($.Fragment,{children:(0,$.jsx)(Dv,{...le})}),(0,$.jsx)(JarvisBookmarkMessageButton,{unitKey:F,turnKey:U,role:`user`,item:E},`kliment-bookmark`)]')
-    source = replace_once(source, '"data-chatgpt-search-message-ids":i,children:[o,s,p,m,S]', '"data-chatgpt-search-message-ids":i,children:[o,s,p,m,S,(0,$.jsx)(JarvisBookmarkMessageButton,{unitKey:F,turnKey:U,role:`assistant`,item:E},`kliment-bookmark`)]')
-    source = replace_once(source, '"data-content-search-unit-key":F,children:(0,$.jsxs)(Ql.Provider', '"data-content-search-unit-key":F,"data-kliment-message-role":`user`,children:(0,$.jsxs)(Ql.Provider')
-    source = replace_once(source, '"data-chatgpt-search-message-ids":i,children:', '"data-chatgpt-search-message-ids":i,"data-kliment-message-role":`assistant`,children:')
-    return "import{JarvisBookmarkMessageButton}from'./jarvis-bookmarks.js';\n" + source
+MODULES += ['webview/assets/jarvis-functional-mods-state.js', 'webview/assets/jarvis-mod-packages.js', 'webview/assets/jarvis-functional-mods-runtime.js', 'webview/assets/jarvis-host-adapter.js', 'webview/assets/jarvis-mods-core.js', 'webview/assets/jarvis-safe-mode.js', 'webview/assets/jarvis-recovery-manager.js', '.vite/build/jarvis-safe-mode-preload.cjs']
+MODULES += ['webview/assets/jarvis-mods-rail.js']
 
 def write_archive(original, target, changes):
     arc = Asar(original); tree = copy.deepcopy(arc.tree)
@@ -158,7 +82,7 @@ def validate_paths(source, output):
         if not marker.is_file():
             raise RuntimeError('Existing output is not a Mods Lab build. Choose a new empty directory.')
         owner = json.loads(marker.read_text(encoding='utf-8'))
-        if owner.get('project') != PROJECT or owner.get('sourceSha256') != SUPPORTED_ASAR_SHA256:
+        if owner.get('project') != PROJECT or owner.get('sourceSha256') not in {adapter.SUPPORTED_ASAR_SHA256 for adapter in ADAPTERS}:
             raise RuntimeError('Existing output belongs to another project or app version.')
     target = output / 'app'
     # Resolve junctions and symlinks before writing; the app must live inside this output.
@@ -167,35 +91,19 @@ def validate_paths(source, output):
     for relative in ('app/resources', 'app/resources/app.asar', 'app/ChatGPT.exe',
                      'app/resources/owl-app.ini', 'app-data', 'codex-home',
                      'codex-home/config.toml', 'logs', 'copy-manifest.json',
-                     'patch-preview.json', '.build-owner.json', 'Launch-Mods.ps1', 'Launch-Mods.cmd'):
+                     'patch-preview.json', '.build-owner.json', 'Launch-Mods.ps1', 'Launch-Mods.cmd', 'Launch-Safe-Mode.cmd'):
         path = output / relative
         if path.resolve() != path:
             raise RuntimeError('Output paths must not be symlinks or junctions: ' + relative)
     return source, output
 
-def prepare_changes(arc):
-    patches = {
-        'webview/index.html': patch_community_csp,
-        SETTINGS: patch_settings,
-        INITIAL: lambda text: patch_mods_rail(patch_composer(text)),
-        LOCAL_THREAD: patch_local_thread, LOCAL_TURN: patch_local_turn,
-        CHATGPT_PAGE: patch_chatgpt_page, CHATGPT_TURN: patch_chatgpt_turn,
-    }
-    changes = {}
-    for name, patch in patches.items():
-        before = arc.read(name)
-        changes[name] = (before, patch(before.decode('utf-8')).encode('utf-8'))
-    before = arc.read(BOOTSTRAP)
-    text = replace_once(before.decode('utf-8'),
-        'appUpdates:new Kn({enableUpdater:l.t.shouldIncludeUpdater(m,process.platform,process.env)',
-        'appUpdates:new Kn({enableUpdater:!1')
-    text = replace_once(text, 'function VE(e){let t=X(e),n=t.join(`/`);',
-        'function VE(e){let t=X(e),n=t.join(`/`);if(n===`mods`)return{kind:`settings`,section:`general-settings`,search:`?jarvis-mods=1`};')
-    changes[BOOTSTRAP] = (before, text.encode('utf-8'))
-    before = arc.read(ENTRY)
-    changes[ENTRY] = (before, LAUNCH_GUARD.encode('utf-8') + before)
+def prepare_changes(arc, adapter=current_adapter):
+    guard = (ROOT / 'src/jarvis-launch-guard.cjs').read_text(encoding='utf-8')
+    changes = adapter.prepare_patches(arc, guard)
     modules = {name: (ROOT / 'src' / pathlib.PurePosixPath(name).name).read_bytes() for name in MODULES}
+    modules['webview/assets/jarvis-host-adapter.js'] = adapter.host_module_source()
     return changes, modules
+
 
 def main():
     if hasattr(sys.stdout, 'reconfigure'):
@@ -207,13 +115,16 @@ def main():
     args = parser.parse_args()
     source, output = validate_paths(args.source_app or detect_source(), args.output)
     archive = source / 'resources/app.asar'
-    if file_hash(archive) != SUPPORTED_ASAR_SHA256:
-        raise RuntimeError('Unsupported app archive. This patch supports only version ' + SUPPORTED_VERSION + ' with the SHA-256 recorded in README.md. No files were changed.')
+    source_hash = file_hash(archive)
+    if source_hash not in {adapter.SUPPORTED_ASAR_SHA256 for adapter in ADAPTERS}:
+        raise RuntimeError('Unsupported app archive. No reviewed adapter matches its SHA-256. No files were changed.')
     arc = Asar(archive)
     package = json.loads(arc.read('package.json'))
-    if package['version'] != SUPPORTED_VERSION:
-        raise RuntimeError('Unsupported app version. No files were changed.')
-    changes, modules = prepare_changes(arc)
+    adapter = select_adapter(package['version'], source_hash)
+    owner_path = output / '.build-owner.json'
+    if owner_path.exists() and json.loads(owner_path.read_text(encoding='utf-8'))['sourceSha256'] != source_hash:
+        raise RuntimeError('Existing output belongs to another app build. Choose a fresh output directory.')
+    changes, modules = prepare_changes(arc, adapter)
     old_header = header_hash(archive)
     original_exe = (source / 'ChatGPT.exe').read_bytes() if not args.patch_only else None
     if original_exe is not None and original_exe.count(old_header.encode()) != 1:
@@ -222,11 +133,11 @@ def main():
     # All version checks and replacement matches succeeded before any output is written.
     output.mkdir(parents=True, exist_ok=True)
     (output / '.build-owner.json').write_text(json.dumps({
-        'project': PROJECT, 'sourceSha256': SUPPORTED_ASAR_SHA256,
-        'version': SUPPORTED_VERSION}, indent=2) + '\n', encoding='utf-8')
+        'project': PROJECT, 'sourceSha256': source_hash,
+        'version': adapter.SUPPORTED_VERSION}, indent=2) + '\n', encoding='utf-8')
     preview = output / 'preview'
     preview.mkdir(exist_ok=True)
-    labels = {SETTINGS: 'settings-page', INITIAL: 'app-initial', BOOTSTRAP: 'bootstrap', ENTRY: 'early-bootstrap'}
+    labels = {adapter.SETTINGS: 'settings-page', adapter.INITIAL: 'app-initial', adapter.BOOTSTRAP: 'bootstrap', adapter.ENTRY: 'early-bootstrap'}
     for name, (_, data) in changes.items():
         label = labels.get(name, pathlib.PurePosixPath(name).stem)
         (preview / (label + '.patched.js')).write_bytes(data)
@@ -248,21 +159,23 @@ def main():
             'originalAsarHeaderHash': old_header, 'copyAsarHeaderHash': new_header,
             'signatureChanged': True}
         (target / 'resources/owl-app.ini').write_text(
-            '[Owl]\nUserDataDirectoryName=Codex-Mods-Lab\nAppVersion=' + SUPPORTED_VERSION + '\n', encoding='utf-8')
+            '[Owl]\nUserDataDirectoryName=Codex-Mods-Lab\nAppVersion=' + adapter.SUPPORTED_VERSION + '\n', encoding='utf-8')
         for name in ('app-data', 'codex-home', 'logs'):
             (output / name).mkdir(exist_ok=True)
         config = output / 'codex-home/config.toml'
         if not config.exists():
             config.write_text('# Isolated Mods Lab profile. No original configuration copied.\n', encoding='utf-8')
-        for name in ('Launch-Mods.ps1', 'Launch-Mods.cmd'):
+        for name in ('Launch-Mods.ps1', 'Launch-Mods.cmd', 'Launch-Safe-Mode.cmd'):
             shutil.copyfile(ROOT / 'scripts' / name, output / name)
     manifest = {
         'project': PROJECT, 'source': str(source), 'sourceVersion': package['version'],
-        'sourceSha256': SUPPORTED_ASAR_SHA256, 'copy': str(target),
+        'sourceSha256': source_hash, 'copy': str(target),
         'changes': {name: {'beforeSha256': hashlib.sha256(before).hexdigest(),
                            'afterSha256': hashlib.sha256(after).hexdigest()}
                     for name, (before, after) in changes.items()},
         'newModule': MODULE, 'newModules': MODULES,
+        'adapter': {'id': adapter.ADAPTER_ID, 'apiVersion': adapter.API_VERSION, 'appVersion': adapter.SUPPORTED_VERSION},
+        'safeMode': {'launcher': 'Launch-Safe-Mode.cmd', 'preload': '.vite/build/jarvis-safe-mode-preload.cjs', 'preferencesOverwritten': False},
         'installedMods': ['context-bar', 'bookmarks'], 'binaryChanges': binary_changes,
         'isolation': {'userData': str(output / 'app-data'), 'codexHome': str(output / 'codex-home'),
                       'credentialsCopied': False, 'updatesEnabled': False}}
