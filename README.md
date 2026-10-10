@@ -2,9 +2,9 @@
 
 [Русский](README.ru.md)
 
-An unofficial UI patch for the Windows Codex desktop app. Adds a **Моды** (Mods) tab directly to Settings, a shortcut on the left navigation rail, and compact cards with expandable settings for each mod.
+An unofficial UI patch for the Windows Codex desktop app. Adds a **Mods** tab directly to Settings, a shortcut on the left navigation rail, and compact cards with expandable settings for each mod.
 
-The repository contains our patch sources and build tools. You supply your own installed application; the builder creates a separate local copy. No application binaries, bundled application sources, chats, credentials, or profiles are distributed here. The patch UI currently uses Russian labels.
+The repository contains our patch sources and build tools. You supply your own installed application; the builder creates a separate local copy. No application binaries, bundled application sources, chats, credentials, or profiles are distributed here. The mod interface supports **English and Russian**.
 
 ## Included mods
 
@@ -13,29 +13,37 @@ The repository contains our patch sources and build tools. You supply your own i
 | Context bar | Shows used and remaining context from the app's native token statistics. Optional warning at 70%, 80%, 90%, or 95%. |
 | Message bookmarks | Save, rename, remove, and jump to messages in the current chat. Open the bookmark list with **Ctrl+Alt+K**; choose **Alt+B** or disable the shortcut in Settings. Message icons can be hidden independently. |
 
-The master switch starts **off**. Open Settings → **Моды** and enable it; each card has its own controls and reset button. Preferences and bookmarks are saved locally in the test copy's profile. They do not synchronize between devices.
+The master switch starts **off**. Open Settings → **Mods** and enable it; each card has its own controls and reset button. Preferences and bookmarks are saved locally in the test copy's profile. They do not synchronize between devices.
+
+## Interface language
+
+Open **Settings → Mods → Language** and choose **Automatic (app language)**, **English**, or **Русский**. Automatic is the default: Russian app locales use Russian; all other app locales use English. An explicit choice takes effect immediately and persists after restarting the copy.
+
+This covers the Mods tab, navigation shortcut, cards, context meter, warnings, tooltips, bookmark dialogs, and accessibility labels. The host app keeps its own language setting. Existing preferences and bookmarks are preserved; message text and custom bookmark names are not translated.
+
+To update an existing copy, close it completely, update the repository, and rerun the builder with the same output directory. Its local profile is retained.
 
 ## Screenshots
 
-Captured from the separate Windows test copy. The mod interface currently uses Russian labels; the descriptions below explain the controls in English.
+Captured from the separate Windows test copy with **English** selected for the mods. The host app is set to Russian, so its own navigation and demo message remain in Russian.
 
 ### Mods in Settings
 
-The **Моды** (Mods) tab and navigation shortcut open a page with a master switch and one card per mod. Select **Настроить** (Configure) to expand that mod's settings.
+The **Mods** tab and navigation shortcut open a page with a language selector, master switch, and one card per mod. Select **Configure** to expand that mod's settings.
 
-![Mods tab in Settings with separate cards for the context bar and message bookmarks](https://github.com/user-attachments/assets/c8194027-c9ba-4864-934e-3422dd2c1838)
+![Mods tab in Settings with separate cards for the context bar and message bookmarks](https://github.com/user-attachments/assets/e82f9139-3fc1-4ff0-81b6-a32faa14c4f9)
 
 ### Context bar
 
 The meter sits above the message input. This example shows **13% used and 87% remaining**, based on the conversation's last native token report. The warning threshold is configurable in the mod's card.
 
-![Context bar above the message input showing 13 percent used and 87 percent remaining](https://github.com/user-attachments/assets/e1987867-c3dc-468f-85e2-4e55f15be0ec)
+![Context bar above the message input showing 13 percent used and 87 percent remaining](https://github.com/user-attachments/assets/d9ffc809-6ad3-49ea-a366-5720367d0868)
 
 ### Message bookmarks
 
-Open the current chat's saved messages from its **Закладки** (Bookmarks) button or with **Ctrl+Alt+K**. Select a bookmark to jump to the message, or use **Переименовать** (Rename) and **Удалить** (Remove).
+Open the current chat's saved messages from its **Bookmarks** button or with **Ctrl+Alt+K**. Select a bookmark to jump to the message, or use **Rename** and **Remove**.
 
-![Bookmark list with a saved assistant response, a custom title, and rename and remove controls](https://github.com/user-attachments/assets/33833b0b-abf1-4cf9-8dd9-b84d99d26857)
+![Bookmark list with a saved assistant response, a custom title, and rename and remove controls](https://github.com/user-attachments/assets/132a2bb0-3806-4a82-9e01-f3f8959b943b)
 
 ## Compatibility
 
