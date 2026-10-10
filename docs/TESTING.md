@@ -47,6 +47,15 @@ These checks describe the experiment used to develop the authored modules. Publi
 
 All live functional checks used authored starter packages and a neutral test draft. Live ChatGPT conversation actions and rich-message copy fidelity remain unverified. No generated template was sent to the assistant during these checks.
 
+## Live Safe Mode and adapter checks
+
+- Rebuilt and verified the isolated copy using the extracted **codex-windows-26.1007.21434** adapter. Normal Settings, the rail shortcut, stored preferences and existing custom cards continued to work.
+- Imported a disposable **Recovery test** functional package containing a copy-last-response action. Enabled it and reproduced its missing-response error in the empty home composer. This tests a failed action, not a native renderer crash or an arbitrary JavaScript extension.
+- The launcher rejected a Safe Mode request while the normal test copy was still running. After closing that copy, Safe Mode started with a distinct title and recovery banner.
+- The recovery manager listed custom packages as Not loaded. Removed Recovery test, restored it with Undo, then removed it again. Other package cards remained present.
+- Opened the neutral existing conversation in Safe Mode: visual styling, the functional toolbar, context meter and bookmark controls were absent. Its native response and saved draft remained visible.
+- Restarted normally: the master switch, both built-in mods, Violet, Reply tools and Prompt templates retained their enabled choices. Recovery test remained removed. The chat again showed the visual theme, context meter, one saved bookmark and the customized Summary label; its draft was retained.
+
 ## Automated checks
 
 - Preferences: migration, validation, per-mod reset, persistence across remounts, and recovery when local storage is blocked or corrupt.
@@ -58,9 +67,11 @@ All live functional checks used authored starter packages and a neutral test dra
 - Visual mods: strict portable package validation, bounds and injection rejection, imports disabled by default, duplicate protection, atomic save failures, separate storage, editor preview/cancel/save, export round-trip, importing copies, and runtime pause/corrupt-library fallback.
 - Community library: strict catalog and package validation, bounded downloads, fixed HTTPS destinations, offline cache retention, search, preview/install, duplicates without overwriting active mods, public submission parsing/approval, ID ownership collisions, token rejection/no persistence, and no automatic retries after an uncertain public write.
 - Functional mods: strict declarative action schemas and text limits, rejecting code/shell/URL hooks, compact export near the package limit, mixed and legacy catalogs, separate storage, combined 50-package limit before writes, concurrent enable, rollback/undo, cross-kind ID collisions, reviewed publication, editor cancel/save/export, scoped response copy/navigation, draft preservation, shortcut matching and conflicts, and paused/corrupt-library fallback.
-- Full local copy verification: only nine original archive entries modified and fourteen modules added; remaining metadata and the complete original payload preserved; executable changed only to refresh the archive header hash; original source archive unchanged. The additional original entry is the HTML CSP, allowing only the two GitHub connection origins needed by the community library.
+- Safe Mode: session flag latching, skipping all mod imports/hooks in recovery, normal module loading/failure fallback, minimal manager removal/Undo, invalid individual records, malformed JSON export/reset recovery, exact restoration, storage failures and concurrent-window conflicts. The trusted preload exposes only its frozen flag; the startup guard registers it before loading and stops on preload failure.
+- Adapters: strict version/hash selection, unknown-build rejection, registry metadata and generic UI modules importing the host bridge rather than native hashed exports.
+- Full local copy verification: only nine original archive entries modified and twenty authored modules added; remaining metadata and the complete original payload preserved; executable changed only to refresh the archive header hash; original source archive unchanged. The additional original entry is the HTML CSP, allowing only the two GitHub connection origins needed by the community library.
 
-The rail helper is appended to an existing bundle. Added modules include localization, the visual and community libraries, functional storage/runtime and the shared package adapter. Native integration checks that both the context meter and functional toolbar mount alongside the original composer content, and that the host's memoized Settings navigation and search refresh when the mod language changes. Full verification does not inspect chats or authentication storage.
+The native rail wrapper is appended to an existing bundle and calls an authored generic rail module. Added modules include localization, libraries, storage/runtime, the host bridge, loading core, recovery manager and Safe Mode preload. Native integration checks that both the context meter and functional toolbar mount alongside the original composer content, and that the host's memoized Settings navigation and search refresh when the mod language changes. Full verification does not inspect chats or authentication storage.
 
 ## Remaining coverage
 
