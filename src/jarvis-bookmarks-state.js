@@ -58,7 +58,7 @@ export function changeBookmark(storage, change) {
   } else if (change.action === 'add') {
     if (index >= 0) return latest;
     const excerpt = cleanText(change.excerpt, 280);
-    const title = cleanText(change.title || excerpt || (change.role === 'user' ? 'Сообщение пользователя' : 'Ответ ассистента'), 120);
+    const title = cleanText(change.title || excerpt || change.defaultTitle || (change.role === 'user' ? 'Сообщение пользователя' : 'Ответ ассистента'), 120);
     next = [...latest, {conversationKey: change.conversationKey, unitKey: change.unitKey, turnKey: change.turnKey, role: change.role, title, excerpt, createdAt: change.createdAt ?? Date.now()}];
   } else throw new Error('Неизвестное действие с закладкой.');
   const validated = parseBookmarks(JSON.stringify({version: 1, entries: next}));
