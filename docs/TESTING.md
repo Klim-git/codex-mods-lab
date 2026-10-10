@@ -14,6 +14,27 @@ Tested on Windows with application version **26.1007.21434**, Store package **26
 - Expanded context and bookmark settings, the English Ctrl+Alt+K dialog, and bookmark renaming/navigation were checked in the separate test copy. Public screenshots use a neutral demo conversation.
 - The original installation archive hash and executable signature remained unchanged.
 
+## Live visual-library checks
+
+- Installed lists both built-in mods and custom visual cards; the selected inner tab is marked visibly.
+- Created an Ocean package in the editor; changing a preset updated the sample conversation before saving. Save and apply added a card and changed actual chat messages.
+- Export downloaded a `.codexmod.json` file to Downloads. Its metadata and appearance were inspected; it contains no transcript, bookmarks, profile or account data.
+- Imported that exact downloaded file through the Windows file picker, reviewed the package, and installed a copy. The original ID/name and active selection were preserved; the copy started disabled.
+- The complete library, selected visual mod and English language override survived rebuilding/restarting the same isolated copy. Automatic restored Russian labels, retaining custom names.
+- Edited the imported copy into Paper. Its light message background, dark text and native response buttons were checked in the actual local demo chat, alongside the existing context bar and bookmark count.
+- Checked the editor in English and Russian. Context and bookmark settings still start collapsed. The test profile was retained; the original app archive and executable signature were unchanged.
+
+Live checks used a neutral local conversation. Rich attachments and live ChatGPT conversation styling have not been exhaustively checked. The native selectors for both local and ChatGPT messages are covered by integration checks.
+
+## Live community-library checks
+
+- The current page has only Installed and Community library. The Create mod button and separate editor tab were removed; AI-authored packages enter through Import. Appearance editing remains available on each custom card.
+- The isolated copy fetched the public GitHub catalog and displayed Ocean, Paper and Violet. Searching for Violet filtered the cards; its preview showed the package before installation.
+- Installed Violet from that catalog, initially disabled. The active local Paper package and existing built-in preferences were preserved. Violet and the active selection survived rebuilding and restarting the copy.
+- Removed Violet from its card and restored it with Undo removal. The installed count changed from five to four and back to five; the active Paper package stayed selected.
+- Opened Share from the installed card. Checked metadata, preview and publication consent; the GitHub route is disabled until consent is selected. After consent, the system browser opened a new GitHub issue form with the exact Violet title and JSON package prefilled. Browser links use the host application's native open-in-browser message to open the system browser explicitly; ordinary anchors may open the isolated built-in browser without an existing GitHub session. The test form was closed without publishing a duplicate issue.
+- Live tests did not submit a real personal access token or create a duplicate public issue. Direct submission responses and maintainer approval are covered by the automated checks; a live approval workflow run remains outstanding.
+
 These checks describe the experiment used to develop the authored modules. Publication packaging verifies a fresh locally built archive. Private chats, profiles, raw diagnostics, and application bundles are not published.
 
 ## Automated checks
@@ -24,9 +45,11 @@ These checks describe the experiment used to develop the authored modules. Publi
 - Bookmarks: add/remove/rename, conversation isolation, duplicate protection, atomic storage failure, migration, shortcut matching, and disabled states.
 - Builder: refusing overlapping or unrelated output folders; preserving synthetic archive payload and unchanged entry metadata while updating modified entries and hashes. Symlink checks may be skipped on Windows when symlink privileges are unavailable.
 - Optional native integration: settings navigation/search/deep links, composer insertion, native message keys, local/ChatGPT older-history adapters, and launch profile guard.
-- Full local copy verification: only eight original archive entries modified and six modules added; remaining metadata and the complete original payload preserved; executable changed only to refresh the archive header hash; original source archive unchanged.
+- Visual mods: strict portable package validation, bounds and injection rejection, imports disabled by default, duplicate protection, atomic save failures, separate storage, editor preview/cancel/save, export round-trip, importing copies, and runtime pause/corrupt-library fallback.
+- Community library: strict catalog and package validation, bounded downloads, fixed HTTPS destinations, offline cache retention, search, preview/install, duplicates without overwriting active mods, public submission parsing/approval, ID ownership collisions, token rejection/no persistence, and no automatic retries after an uncertain public write.
+- Full local copy verification: only nine original archive entries modified and eleven modules added; remaining metadata and the complete original payload preserved; executable changed only to refresh the archive header hash; original source archive unchanged. The additional original entry is the HTML CSP, allowing only the two GitHub connection origins needed by the community library.
 
-The rail helper is appended to an existing bundle. The sixth added module contains localization. Native integration also checks that the host's memoized Settings navigation and search refresh when the mod language changes. Full verification does not inspect chats or authentication storage.
+The rail helper is appended to an existing bundle. Added modules include localization and three visual-library modules (storage, editor, runtime styles). Native integration also checks that the host's memoized Settings navigation and search refresh when the mod language changes. Full verification does not inspect chats or authentication storage.
 
 ## Remaining coverage
 
