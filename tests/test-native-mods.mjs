@@ -16,12 +16,12 @@ let tree;
 // Execute the actual new panel with deterministic React/JSX adapters and isolated storage.
 let moduleSource = fs.readFileSync(new URL('src/jarvis-mods-native.js', root), 'utf8');
 moduleSource = moduleSource.replace(/^import\s*\{[\s\S]*?\}\s*from\s*['"][^'"]+['"];\s*/gm, '').replaceAll('export ', '');
-moduleSource = fs.readFileSync(new URL('src/jarvis-mods-state.js', root), 'utf8').replaceAll('export ', '') + '\n' + moduleSource;
+moduleSource = fs.readFileSync(new URL('src/jarvis-mods-state.js', root), 'utf8').replaceAll('export ', '') + '\n' + fs.readFileSync(new URL('src/jarvis-mods-i18n.js', root), 'utf8').replace(/^import\s*\{[\s\S]*?\}\s*from\s*['"][^'"]+['"];\s*/gm, '').replaceAll('export ', '') + '\n' + moduleSource;
 const saved = new Map();
 const storage = {getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value)};
-function makePanel() {
+function makePanel(appLocale = 'ru-RU') {
   const state = []; let currentHook = 0;
-  const React = {useEffect: noop, useState: initial => {
+  const React = {useEffect: noop, useSyncExternalStore: (_, snapshot) => snapshot(), useState: initial => {
     const slot = currentHook++;
     if (!(slot in state)) state[slot] = typeof initial === 'function' ? initial() : initial;
     return [state[slot], value => {state[slot] = value;}];
@@ -29,6 +29,7 @@ function makePanel() {
   const Group = Object.assign(() => {}, {Header: 'GroupHeader'});
   const c = vm.createContext({window: {localStorage: storage, dispatchEvent: noop}, Event: class {}, getReact: () => React, getJsx: () => ({jsx, jsxs: jsx}),
     initToggle: noop, initRow: noop, initRows: noop, initButton: noop, initGroup: noop,
+    getLocaleReact: () => React, useAppIntl: () => ({locale: appLocale}),
     Toggle: 'Toggle', SettingsRow: 'Row', SettingsRows: 'Rows', SettingsGroup: Group, Button: 'Button', console});
   vm.runInContext(moduleSource + '\nglobalThis.panel = JarvisModsPanel;globalThis.key = storageKey;', c);
   return {render: () => {currentHook = 0; return c.panel();}, key: c.key};
@@ -124,4 +125,23 @@ button(card(tree), 'Сбросить настройки полосы конте�
 assert.equal(JSON.parse(saved.get(panel.key)).nextMod, 'Паспорт чата', 'Mod reset must not overwrite other stored preferences');
 assert.equal(JSON.parse(saved.get(panel.key)).showPlannedMods, false);
 assert(!JSON.stringify(tree).includes('Паспорт чата'));
+const beforeLanguageChange = JSON.parse(saved.get(panel.key));
+control(tree, 'Язык').props.onChange({target: {value: 'en'}}); tree = panel.render();
+assert.equal(tree.props.lang, 'en');
+assert.equal(control(tree, 'Enable installed mods').props.checked, true);
+assert.equal(cardStatus(tree), 'Enabled');
+assert.equal(control(card(tree), 'Warning threshold').props.value, 80);
+assert.equal(button(card(tree), 'Collapse context bar settings').props.children, 'Collapse');
+button(card(tree, 'bookmarks'), 'Configure bookmarks').props.onClick(); tree = panel.render();
+const shortcuts = control(card(tree, 'bookmarks'), 'Bookmark keyboard shortcut');
+assert.equal(shortcuts.props.children.find(option => option.props.value === 'Нет').props.children, 'None');
+button(card(tree, 'bookmarks'), 'Reset bookmark settings').props.onClick(); tree = panel.render();
+assert.equal(JSON.parse(saved.get(panel.key)).modsLanguage, 'en', 'Per-mod reset must preserve the language');
+assert.equal(JSON.parse(saved.get(panel.key)).nextMod, beforeLanguageChange.nextMod);
+panel = makePanel(); tree = panel.render();
+assert.equal(control(tree, 'Language').props.value, 'en', 'Language override must persist after remount');
+saved.set(panel.key, '{bad json'); panel = makePanel('en-US'); tree = panel.render();
+assert(flatten(tree).find(n => n.props.role === 'alert').props.children.startsWith('Could not read preferences'));
+button(tree, 'Restore settings').props.onClick(); tree = panel.render();
+assert.equal(control(tree, 'Language').props.value, 'auto');
 console.log('PASS: compact cards, settings hidden by default, disclosure without preference changes, persistence, scoped reset, and storage failure recovery.');
