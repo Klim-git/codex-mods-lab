@@ -8,6 +8,7 @@ import {
 import {defaults, warningThresholds, bookmarkShortcuts, readPreferences, writePreferences, announcePreferenceChange} from './jarvis-mods-state.js';
 
 import {useModsI18n} from './jarvis-mods-i18n.js';
+import {VisualModsLibrary} from './jarvis-visual-mods-library.js';
 
 initToggle(); initRow(); initRows(); initButton();
 const React = getReact();
@@ -95,10 +96,7 @@ export function JarvisModsPanel() {
       jsx(SettingsRow, {label: t('language'), description: t('languageDescription'), control: props => select(props, values.modsLanguage, [{value: 'auto', label: t('languageAuto')}, {value: 'ru', label: 'Русский'}, {value: 'en', label: 'English'}], value => save({modsLanguage: value}), t('language'))}),
       jsx(SettingsRow, {label: t('enableMods'), description: t('enableModsDescription'), control: props => jsx(Toggle, {...props, checked: values.modsEnabled, onChange: value => save({modsEnabled: value})})})
     ]}),
-    jsxs('div', {className: 'flex flex-col gap-3', children: [
-      jsxs('h2', {className: 'flex items-center gap-2 text-sm font-medium', children: [t('installedMods'), jsx('span', {className: 'text-xs font-normal text-secondary', children: '2'})]}),
-      contextCard, bookmarksCard
-    ]}),
+    jsxs(VisualModsLibrary, {preferences: values, i18n: {language, t}, onActivity: () => setStatus(''), children: [contextCard, bookmarksCard]}),
     error ? jsxs('div', {className: 'flex flex-col items-start gap-3', children: [
       jsx('p', {role: 'alert', className: 'text-sm', children: t(error)}),
       jsx(Button, {color: 'secondary', size: 'actionSm', onClick: () => save({}, true), children: t('restore')})
