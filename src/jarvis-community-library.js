@@ -1,4 +1,4 @@
-import {PCn as getCommunityReact, Agn as getCommunityJsx, Ck as CommunityButton, Tk as initCommunityButton} from './app-shared-737655e1fb23.js';
+import {PCn as getCommunityReact, Agn as getCommunityJsx, Ck as CommunityButton, Tk as initCommunityButton, Nvn as CommunityHost} from './app-shared-737655e1fb23.js';
 import {communityHome, readCommunityCache, cacheCommunityCatalog, fetchCommunityCatalog, communitySource, communityMatches, installCommunityMod, communitySubmissionUrl, publishCommunityMod} from './jarvis-community-state.js';
 import {announceVisualChange} from './jarvis-visual-mods-state.js';
 initCommunityButton();
@@ -7,7 +7,11 @@ const {jsx: communityJsx, jsxs: communityJsxs} = getCommunityJsx();
 const communityField = {width: '100%', background: 'var(--color-background-primary-soft-alpha, #242424)', color: 'inherit', border: '1px solid var(--color-border, #454545)', borderRadius: 8, padding: '8px 10px', fontSize: 14, boxSizing: 'border-box'};
 const communityCard = {border: '1px solid var(--color-border, #383838)', borderRadius: 12, padding: 16};
 function communityButton(label, onClick, extra = {}) { return communityJsx(CommunityButton, {color: 'secondary', size: 'actionSm', onClick, children: label, ...extra}); }
-function sourceLink(url, label) { return communityJsx('a', {href: url, target: '_blank', rel: 'noopener noreferrer', style: {color: '#79b8ff', fontSize: 13, textDecoration: 'underline'}, children: label}); }
+function openCommunityLink(event, url) {
+  event.preventDefault();
+  CommunityHost.dispatchMessage('open-in-browser', {url, source: 'manual', useExternalBrowser: true});
+}
+function sourceLink(url, label) { return communityJsx('a', {href: url, target: '_blank', rel: 'noopener noreferrer', onClick: event => openCommunityLink(event, url), style: {color: '#79b8ff', fontSize: 13, textDecoration: 'underline'}, children: label}); }
 
 export function CommunityLibrary({library, readError, i18n, Dialog, Preview}) {
   const {t, language} = i18n;
@@ -103,8 +107,8 @@ export function CommunityPublishDialog({mod, i18n, onClose, Dialog, Preview}) {
     communityJsx('p', {style: {fontSize: 13, opacity: .8}, children: t('communityPublishHint')}),
     communityJsx(Preview, {appearance: mod.appearance, t}),
     receipt ? communityJsxs('div', {role: 'status', children: [communityJsx('p', {style: {fontSize: 13, marginBottom: 8}, children: t('communitySubmitted')}), sourceLink(receipt, t('communityOpenSubmission'))]}) : communityJsxs('div', {style: {display: 'grid', gap: 12}, children: [
-      communityJsxs('label', {style: {display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13}, children: [communityJsx('input', {type: 'checkbox', checked: consent, disabled: busy, onChange: event => setConsent(event.target.checked), 'aria-label': t('communityConsent')}), t('communityConsent')]}),
-      communityJsx('a', {href: communitySubmissionUrl(mod), target: '_blank', rel: 'noopener noreferrer', 'aria-disabled': !consent || busy, onClick: event => {if (!consent || busy) event.preventDefault();}, style: {color: '#79b8ff', opacity: consent && !busy ? 1 : .4, textDecoration: 'underline', fontSize: 14}, children: t('communityPublishGithub')}),
+      communityJsxs('label', {style: {display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13}, children: [communityJsx('input', {type: 'checkbox', checked: consent, disabled: busy, onChange: event => setConsent(event.target.checked), 'aria-label': t('communityConsent'), style: {appearance: 'auto', width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: '#66c4a7'}}), t('communityConsent')]}),
+      communityJsx('a', {href: communitySubmissionUrl(mod), target: '_blank', rel: 'noopener noreferrer', 'aria-disabled': !consent || busy, onClick: event => {if (!consent || busy) event.preventDefault(); else openCommunityLink(event, communitySubmissionUrl(mod));}, style: {color: '#79b8ff', opacity: consent && !busy ? 1 : .4, textDecoration: 'underline', fontSize: 14}, children: t('communityPublishGithub')}),
       communityJsx('p', {style: {fontSize: 12, opacity: .65}, children: t('communityGithubHint')}),
       communityJsxs('details', {children: [communityJsx('summary', {style: {cursor: 'pointer', fontSize: 13}, children: t('communityPublishDirect')}), communityJsxs('div', {style: {display: 'grid', gap: 10, marginTop: 12}, children: [
         communityJsx('p', {style: {fontSize: 12, opacity: .7}, children: t('communityTokenHint')}),
