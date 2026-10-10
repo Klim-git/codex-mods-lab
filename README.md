@@ -15,13 +15,23 @@ The repository contains our patch sources and build tools. You supply your own i
 
 The master switch starts **off**. Open Settings → **Mods** and enable it; each card has its own controls and reset button. Preferences and bookmarks are saved locally in the test copy's profile. They do not synchronize between devices.
 
-The local library adds **Installed**, package **import/export**, and per-card **appearance settings with live preview**. Your AI assistant can prepare a portable `.codexmod.json` package; import it after reviewing the preview. Each custom card offers edit, export, share and remove actions. One visual mod can be active at a time. This first format supports appearance settings only. See [local visual mods](docs/VISUAL-MODS.md) for the workflow and package specification.
+The local library adds **Installed**, package **import/export**, and per-card settings. Your AI assistant can prepare a portable `.codexmod.json` package; import it after reviewing its appearance or actions. Each custom card offers edit, export, share and remove actions. One visual mod and multiple functional mods can be active together. See [visual mods](docs/VISUAL-MODS.md) and [functional mods](docs/FUNCTIONAL-MODS.md) for the package formats.
 
 ## Community library
 
-Open **Settings → Mods → Community library** to search, preview and install shared visual mods. The catalog is public on GitHub, so installation needs no account. Packages start disabled in **Installed**; your existing appearance is kept. A validated offline copy remains available if GitHub cannot be reached. Ocean, Paper and Violet are included as starter packages.
+Open **Settings → Mods → Community library** to search, filter by type, preview and install shared visual or functional mods. The catalog is public on GitHub, so installation needs no account. Packages start disabled in **Installed**; your existing appearance is kept. A validated offline copy remains available if GitHub cannot be reached. Ocean, Paper and Violet are the visual starter packages.
 
-Use **Share mod** on an installed visual mod to prepare a GitHub submission. The default route opens a ready-to-send issue in your browser; sign in and submit it there. An advanced option sends directly from the dialog using a temporary GitHub token. New submissions appear in the catalog after maintainer review. See [sharing and moderation](docs/COMMUNITY.md).
+Three functional starter packages add buttons above the chat input:
+
+| Package | Actions |
+| --- | --- |
+| Reply tools | Copy the last loaded reply, jump to the latest message, or focus the input. |
+| Prompt templates | Append Summarize, Explain or Review instructions to the existing draft. You send the message yourself. |
+| Chat navigation | Jump to the first or last loaded message. |
+
+Actions run only on a button click or a configured **Ctrl+Alt+Shift+letter** shortcut. Edit button labels, template text and shortcuts from each card. Review the actions and access description before enabling a package. This format accepts fixed declarative actions, not arbitrary JavaScript, shell commands, integrations or automatic message sending.
+
+Use **Share mod** on an installed visual or functional mod to prepare a GitHub submission. The default route opens a ready-to-send issue in your browser; sign in and submit it there. An advanced option sends directly from the dialog using a temporary GitHub token. New submissions appear in the catalog after maintainer review. See [sharing and moderation](docs/COMMUNITY.md).
 
 ## Interface language
 
@@ -36,6 +46,18 @@ To update an existing copy, close it completely, update the repository, and reru
 Captured from the separate Windows test copy. The new library views below use Russian; the original context and bookmark examples use English mod labels with Russian host navigation.
 
 ### Installed and community mods
+
+Functional cards have independent switches, alongside the active visual theme.
+
+![Functional packages enabled alongside a visual mod](docs/mods-functional-installed.jpg)
+
+The preview lists actions, shortcuts and exact template text before installation.
+
+![Reviewing functional actions and access before installation](docs/mods-functional-review.jpg)
+
+Buttons add text to the draft while the context meter and bookmarks remain available.
+
+![Functional actions in a neutral demo chat, preserving the existing draft](docs/mods-functional-chat.jpg)
 
 Custom cards include Edit, Export, Share and Remove. There is no creation button: import a package prepared by your AI assistant, or install one from the community catalog.
 
