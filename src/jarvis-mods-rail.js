@@ -1,15 +1,16 @@
 // Version-pinned fragment appended to app-initial: reuse its native rail button,
 // tooltip, router location, and the same host navigation used by Settings.
 function JarvisModsRailButton({onOpenSidebarPopover}) {
+  const label = modText(useModsLanguage(), 'mods');
   const location = Pr();
   const active = location.pathname === '/settings/general-settings' && new URLSearchParams(location.search).get('jarvis-mods') === '1';
   return O2.jsx(Pn, {
     cloneCustomTrigger: true,
     closeOnTriggerClick: true,
-    tooltipContent: 'Моды',
+    tooltipContent: label,
     side: 'right',
     children: O2.jsxs(k0o, {
-      'aria-label': 'Моды',
+      'aria-label': label,
       'aria-current': active ? 'page' : undefined,
       'data-kliment-mods-rail-button': '1',
       selected: active,
@@ -24,7 +25,7 @@ function JarvisModsRailButton({onOpenSidebarPopover}) {
           O2.jsx('circle', {cx: 13, cy: 10, r: 2}),
           O2.jsx('circle', {cx: 7, cy: 15, r: 2})
         ]}),
-        O2.jsx('span', {className: 'sr-only', children: 'Моды'})
+        O2.jsx('span', {className: 'sr-only', children: label})
       ]
     })
   });
