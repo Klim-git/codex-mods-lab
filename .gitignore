@@ -1,0 +1,26 @@
+# Locally copied application, generated proprietary bundles, profiles and logs.
+.mods-lab/
+.build/
+app/
+app-data/
+codex-home/
+logs/
+preview/
+*.patched.js
+*.asar
+*.asar.unpacked/
+*.exe
+*.dll
+*.sqlite*
+*.log
+copy-manifest.json
+patch-preview.json
+.build-owner.json
+verification.json
+auth.json
+.env
+.env.*
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
