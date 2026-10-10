@@ -140,7 +140,7 @@ const composerCtx = vm.createContext({
   ZS: {jsx}, FIt: 'theme', KS: 'surface', QS: 'layout',
   Lm: () => ({}), Vd: () => false, ng: (...v) => v.filter(Boolean).join(' '),
   JS: {ComposerLayoutRoot: 'composer'}, Kl: {div: 'composer-div'}, IIt: noop,
-  JarvisContextBarRoot: 'ContextBar'
+  JarvisContextBarRoot: 'ContextBar', JarvisFunctionalActionsRoot: 'FunctionalActions'
 });
 vm.runInContext(composerSource.slice(start, end), composerCtx);
 const originalChild = jsx('textarea', {'data-existing': 'preserved'});
@@ -148,9 +148,12 @@ tree = composerCtx.cLt({children: originalChild});
 const composer = flatten(tree).find(n => n.type === 'composer-div');
 assert.equal(composer.props.children[0].type, 'ContextBar');
 assert.equal(composer.props.children[0].props.isDocument, false);
-assert.equal(composer.props.children[1], originalChild, 'Original composer content must remain intact');
+assert.equal(composer.props.children[1].type, 'FunctionalActions');
+assert.equal(composer.props.children[1].props.isDocument, false);
+assert.equal(composer.props.children[2], originalChild, 'Original composer content must remain intact');
 tree = composerCtx.cLt({children: originalChild, surfaceVariant: 'document'});
 assert.equal(flatten(tree).find(n => n.type === 'ContextBar').props.isDocument, true);
+assert.equal(flatten(tree).find(n => n.type === 'FunctionalActions').props.isDocument, true);
 
 }
 console.log('PASS: v1 migration, settings events, token math, thresholds, missing data, per-chat selection, disable controls, and disabled states (native integration optional).');

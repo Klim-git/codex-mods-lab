@@ -13,6 +13,7 @@ const window = {localStorage: storage, addEventListener: (key, fn) => {events.se
 const c = vm.createContext({TextEncoder, window, Event, console});
 vm.runInContext(stateSource + '\nglobalThis.api={visualStorageKey,visualFormat,visualDefaults,visualPresets,parseVisualPackage,exportVisualPackage,visualFilename,parseVisualLibrary,readVisualLibrary,updateVisualLibrary,visualForeground,visualMessageStyle,visualStylesheet,subscribeVisualLibrary,announceVisualChange};', c);
 const api = c.api, plain = x => JSON.parse(JSON.stringify(x));
+vm.runInContext(['jarvis-functional-mods-state.js', 'jarvis-mod-packages.js'].map(name => strip(fs.readFileSync(new URL('src/' + name, root), 'utf8'))).join('\n'), c);
 const mod = {id: 'my-ocean', version: '1.0.0', name: 'Ocean $& <script>', author: 'Test', description: 'Shareable appearance', appearance: {...api.visualPresets.ocean}};
 assert.deepEqual(plain(api.parseVisualPackage(api.exportVisualPackage(mod))), mod);
 assert.equal(api.visualFilename(mod), 'my-ocean.codexmod.json');

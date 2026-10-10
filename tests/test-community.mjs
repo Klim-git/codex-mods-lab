@@ -9,12 +9,12 @@ const read = name => strip(fs.readFileSync(new URL('src/' + name, root), 'utf8')
 const values = new Map([['account', 'private'], ['kliment.mods.lab.bookmarks.v1', 'bookmarks']]);
 const storage = {getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value)};
 const c = vm.createContext({TextEncoder, TextDecoder, AbortController, URLSearchParams, Event, Date, setTimeout, clearTimeout, crypto: webcrypto, window: {localStorage: storage, dispatchEvent() {}}});
-vm.runInContext(read('jarvis-visual-mods-state.js') + '\n' + read('jarvis-community-state.js') + '\nglobalThis.api={parseCommunityCatalog,readCommunityCache,cacheCommunityCatalog,fetchCommunityCatalog,installCommunityMod,communityMatches,communitySource,communitySubmission,communitySubmissionUrl,parseCommunitySubmission,publishCommunityMod,communityCacheKey,communityCatalogUrl,communityApi,readVisualLibrary,updateVisualLibrary};', c);
+vm.runInContext(['jarvis-visual-mods-state.js', 'jarvis-functional-mods-state.js', 'jarvis-mod-packages.js', 'jarvis-community-state.js'].map(read).join('\n') + '\nglobalThis.api={parseCommunityCatalog,readCommunityCache,cacheCommunityCatalog,fetchCommunityCatalog,installCommunityMod,communityMatches,communitySource,communitySubmission,communitySubmissionUrl,parseCommunitySubmission,publishCommunityMod,communityCacheKey,communityCatalogUrl,communityApi,readVisualLibrary,updateVisualLibrary};', c);
 const a = c.api, plain = value => JSON.parse(JSON.stringify(value));
 const catalogText = fs.readFileSync(new URL('community/catalog.json', root), 'utf8');
 const catalog = a.parseCommunityCatalog(catalogText), entry = catalog.mods[0], mod = entry.package.mod;
 assert.equal(catalog.mods.length, 3);
-for (const mutate of [v => v.script = 'alert(1)', v => v.mods[0].package.mod.script = 'x', v => v.mods[0].package.mod.appearance.surface = 'url(https://bad)', v => v.mods[0].publisher = '<img>', v => v.mods[0].issueNumber = -1, v => v.mods[0].source = 'https://bad', v => v.mods.push(v.mods[0]), v => v.formatVersion = 2, v => v.updatedAt = 'tomorrow']) {
+for (const mutate of [v => v.script = 'alert(1)', v => v.mods[0].package.mod.script = 'x', v => v.mods[0].package.mod.appearance.surface = 'url(https://bad)', v => v.mods[0].publisher = '<img>', v => v.mods[0].issueNumber = -1, v => v.mods[0].source = 'https://bad', v => v.mods.push(v.mods[0]), v => v.formatVersion = 3, v => v.updatedAt = 'tomorrow']) {
   const bad = plain(catalog); mutate(bad); assert.throws(() => a.parseCommunityCatalog(JSON.stringify(bad)), /communityInvalidCatalog/);
 }
 assert.throws(() => a.parseCommunityCatalog('x'.repeat(1024 * 1024 + 1)));
@@ -27,7 +27,7 @@ await assert.rejects(a.fetchCommunityCatalog(async () => new Response('not found
 await assert.rejects(a.fetchCommunityCatalog(async () => new Response('{')), /communityInvalidCatalog/);
 await assert.rejects(a.fetchCommunityCatalog(async () => new Response('x'.repeat(1024 * 1024 + 1))), /communityInvalidCatalog/);
 assert.equal(values.get(a.communityCacheKey), cacheBefore, 'Failed refresh must not overwrite the last valid catalog');
-assert(a.communitySource(entry).endsWith('/blob/main/community/catalog.json'));
+assert(a.communitySource(entry).endsWith('/blob/main/community/catalog-v2.json'));
 assert(a.communitySource({...entry, issueNumber: 8}).endsWith('/issues/8'));
 const userMod = {...mod, id: 'local-user-mod', name: 'My active mod'};
 a.updateVisualLibrary(storage, {type: 'save', mod: userMod, apply: true});
