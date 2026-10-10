@@ -1,0 +1,41 @@
+name: Review community mod
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Approve a reviewed package or remove its catalog entry
+        required: true
+        type: choice
+        options: [approve, remove]
+      issue_number:
+        description: GitHub issue number (review the package and authorship before approval)
+        required: true
+        type: string
+permissions:
+  contents: write
+  issues: read
+concurrency:
+  group: community-catalog
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate and update catalog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CATALOG_ACTION: ${{ inputs.action }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: node scripts/community_catalog.mjs --"$CATALOG_ACTION"-issue "$ISSUE_NUMBER"
+      - name: Publish reviewed catalog
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add community/catalog.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update reviewed community mod catalog'
+          git push
