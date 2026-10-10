@@ -15,6 +15,28 @@ The repository contains our patch sources and build tools. You supply your own i
 
 The master switch starts **off**. Open Settings → **Моды** and enable it; each card has its own controls and reset button. Preferences and bookmarks are saved locally in the test copy's profile. They do not synchronize between devices.
 
+## Screenshots
+
+Captured from the separate Windows test copy. The mod interface currently uses Russian labels; the descriptions below explain the controls in English.
+
+### Mods in Settings
+
+The **Моды** (Mods) tab and navigation shortcut open a page with a master switch and one card per mod. Select **Настроить** (Configure) to expand that mod's settings.
+
+![Mods tab in Settings with separate cards for the context bar and message bookmarks](https://github.com/user-attachments/assets/c8194027-c9ba-4864-934e-3422dd2c1838)
+
+### Context bar
+
+The meter sits above the message input. This example shows **13% used and 87% remaining**, based on the conversation's last native token report. The warning threshold is configurable in the mod's card.
+
+![Context bar above the message input showing 13 percent used and 87 percent remaining](https://github.com/user-attachments/assets/e1987867-c3dc-468f-85e2-4e55f15be0ec)
+
+### Message bookmarks
+
+Open the current chat's saved messages from its **Закладки** (Bookmarks) button or with **Ctrl+Alt+K**. Select a bookmark to jump to the message, or use **Переименовать** (Rename) and **Удалить** (Remove).
+
+![Bookmark list with a saved assistant response, a custom title, and rename and remove controls](https://github.com/user-attachments/assets/33833b0b-abf1-4cf9-8dd9-b84d99d26857)
+
 ## Compatibility
 
 This first release supports only the tested Windows build:
