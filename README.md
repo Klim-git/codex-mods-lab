@@ -41,6 +41,12 @@ This covers the Mods tab, navigation shortcut, cards, context meter, warnings, t
 
 To update an existing copy, close it completely, update the repository, and rerun the builder with the same output directory. Its local profile is retained.
 
+## Safe Mode and build adapters
+
+Close all copy windows and run **`Launch-Safe-Mode.cmd`** to start with mod runtimes paused. **Settings → Mods** opens a recovery manager where you can remove a problematic package, undo the last change or export a library backup. Enabled settings are retained; return through `Launch-Mods.cmd` after closing the copy. See [Safe Mode instructions and screenshots](docs/SAFE-MODE.md).
+
+Native bundle paths, patch anchors and UI bindings are separated into an adapter for **26.1007.21434**. Version and original archive hash must match exactly. This prepares future ports; only the current Windows build is supported. See [adapter structure](docs/ADAPTERS.md).
+
 ## Screenshots
 
 Captured from the separate Windows test copy. The new library views below use Russian; the original context and bookmark examples use English mod labels with Russian host navigation.
