@@ -1,0 +1,178 @@
+{
+  "format": "codex-mods-lab/community",
+  "formatVersion": 2,
+  "updatedAt": "2026-10-10T18:56:36.451942Z",
+  "mods": [
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/visual",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-ocean",
+          "version": "1.0.0",
+          "name": "Ocean",
+          "author": "Mods Lab",
+          "description": "Blue accents and a dark chat surface.",
+          "appearance": {
+            "accent": "#79b8ff",
+            "surface": "#202935",
+            "fontSize": 15,
+            "cornerRadius": 16,
+            "contentWidth": 800
+          }
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/visual",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-paper",
+          "version": "1.0.0",
+          "name": "Paper",
+          "author": "Mods Lab",
+          "description": "A light paper surface with dark, readable text.",
+          "appearance": {
+            "accent": "#486ca8",
+            "surface": "#f2f0e9",
+            "fontSize": 15,
+            "cornerRadius": 16,
+            "contentWidth": 800
+          }
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/visual",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-violet",
+          "version": "1.0.0",
+          "name": "Violet",
+          "author": "Mods Lab",
+          "description": "Violet accents on a dark chat surface.",
+          "appearance": {
+            "accent": "#bc9aff",
+            "surface": "#2b2435",
+            "fontSize": 15,
+            "cornerRadius": 16,
+            "contentWidth": 800
+          }
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/functional",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-reply-tools",
+          "version": "1.0.0",
+          "name": "Reply tools",
+          "description": "Copy the last reply, jump to it, or focus the input.",
+          "author": "Mods Lab",
+          "actions": [
+            {
+              "id": "copy",
+              "label": "Copy reply",
+              "kind": "copy-last-response",
+              "shortcut": "Ctrl+Alt+Shift+C"
+            },
+            {
+              "id": "latest",
+              "label": "Latest reply",
+              "kind": "scroll-chat",
+              "shortcut": null,
+              "target": "last"
+            },
+            {
+              "id": "focus",
+              "label": "Focus input",
+              "kind": "focus-input",
+              "shortcut": "Ctrl+Alt+Shift+F"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/functional",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-prompt-templates",
+          "version": "1.0.0",
+          "name": "Prompt templates",
+          "description": "Add reusable instructions to your draft without sending them.",
+          "author": "Mods Lab",
+          "actions": [
+            {
+              "id": "summarize",
+              "label": "Summarize",
+              "kind": "insert-text",
+              "shortcut": "Ctrl+Alt+Shift+S",
+              "text": "Summarize the key points of this conversation in five bullets."
+            },
+            {
+              "id": "explain",
+              "label": "Explain",
+              "kind": "insert-text",
+              "shortcut": "Ctrl+Alt+Shift+E",
+              "text": "Explain the last answer step by step, using a concrete example."
+            },
+            {
+              "id": "review",
+              "label": "Review",
+              "kind": "insert-text",
+              "shortcut": "Ctrl+Alt+Shift+R",
+              "text": "Review the proposed solution. Identify assumptions, possible errors, and the next useful step."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/functional",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-chat-navigation",
+          "version": "1.0.0",
+          "name": "Chat navigation",
+          "description": "Jump to the first or last loaded message in this chat.",
+          "author": "Mods Lab",
+          "actions": [
+            {
+              "id": "first",
+              "label": "First message",
+              "kind": "scroll-chat",
+              "shortcut": "Ctrl+Alt+Shift+U",
+              "target": "first"
+            },
+            {
+              "id": "last",
+              "label": "Last message",
+              "kind": "scroll-chat",
+              "shortcut": "Ctrl+Alt+Shift+D",
+              "target": "last"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
