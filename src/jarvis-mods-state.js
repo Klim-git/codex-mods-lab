@@ -4,6 +4,7 @@ export const nextMods = ['Пока не выбран', 'Полоса конте�
 export const warningThresholds = [70, 80, 90, 95];
 export const bookmarkShortcuts = ['Ctrl+Alt+K', 'Alt+B', 'Нет'];
 export const defaults = {
+  modsLanguage: 'auto',
   modsEnabled: false,
   showPlannedMods: true,
   nextMod: nextMods[0],
@@ -20,6 +21,7 @@ export function parsePreferences(raw) {
   const data = JSON.parse(raw);
   if (!data || typeof data !== 'object' || Array.isArray(data) ||
       typeof data.modsEnabled !== 'boolean' || typeof data.showPlannedMods !== 'boolean' ||
+      (data.modsLanguage !== undefined && !['auto', 'en', 'ru'].includes(data.modsLanguage)) ||
       !nextMods.includes(data.nextMod) ||
       (data.contextBarEnabled !== undefined && typeof data.contextBarEnabled !== 'boolean') ||
       (data.contextWarningEnabled !== undefined && typeof data.contextWarningEnabled !== 'boolean') ||
@@ -31,6 +33,7 @@ export function parsePreferences(raw) {
   }
   // Older copies saved only the first three fields. Preserve them during migration.
   return {
+    modsLanguage: data.modsLanguage ?? defaults.modsLanguage,
     modsEnabled: data.modsEnabled,
     showPlannedMods: data.showPlannedMods,
     nextMod: data.nextMod,
