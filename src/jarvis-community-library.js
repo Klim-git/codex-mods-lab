@@ -1,6 +1,6 @@
 import {PCn as getCommunityReact, Agn as getCommunityJsx, Ck as CommunityButton, Tk as initCommunityButton, Nvn as CommunityHost} from './app-shared-737655e1fb23.js';
 import {communityHome, readCommunityCache, cacheCommunityCatalog, fetchCommunityCatalog, communitySource, communityMatches, installCommunityMod, communitySubmissionUrl, publishCommunityMod} from './jarvis-community-state.js';
-import {announceVisualChange} from './jarvis-visual-mods-state.js';
+import {announceModChange, modKind} from './jarvis-mod-packages.js';
 initCommunityButton();
 const CommunityReact = getCommunityReact();
 const {jsx: communityJsx, jsxs: communityJsxs} = getCommunityJsx();
@@ -22,6 +22,7 @@ export function CommunityLibrary({library, readError, i18n, Dialog, Preview}) {
   const [query, setQuery] = CommunityReact.useState('');
   const [selected, setSelected] = CommunityReact.useState(null);
   const [status, setStatus] = CommunityReact.useState('');
+  const [filter, setFilter] = CommunityReact.useState('all');
   const controllerRef = CommunityReact.useRef(null);
   const requestRef = CommunityReact.useRef(0);
   async function refresh() {
@@ -42,12 +43,12 @@ export function CommunityLibrary({library, readError, i18n, Dialog, Preview}) {
   function install(entry) {
     try {
       installCommunityMod(window.localStorage, entry, crypto.randomUUID(), t('visualCopySuffix'));
-      announceVisualChange(); setSelected(null); setError(''); setStatus('visualImported');
+      announceModChange(); setSelected(null); setError(''); setStatus('visualImported');
     } catch (cause) { setError(['visualLimit', 'visualSaveError', 'visualReadError'].includes(cause.message) ? cause.message : 'visualInvalidPackage'); }
   }
   const entries = (data?.catalog.mods ?? []).filter(entry => {
     const mod = entry.package.mod;
-    return [mod.name, mod.description, mod.author, entry.publisher].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+    return (filter === 'all' || modKind(mod) === filter) && [mod.name, mod.description, mod.author, entry.publisher].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
   });
   const installed = entry => library.mods.some(mod => communityMatches(entry.package.mod, mod));
   const duplicate = entry => library.mods.some(mod => mod.id === entry.package.mod.id);
@@ -56,14 +57,15 @@ export function CommunityLibrary({library, readError, i18n, Dialog, Preview}) {
     communityJsx('p', {style: {fontSize: 13, opacity: .75}, children: t('communityDescription')}),
     communityJsxs('div', {style: {display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap'}, children: [
       communityJsx('input', {type: 'search', 'aria-label': t('communitySearch'), placeholder: t('communitySearch'), value: query, maxLength: 100, onChange: event => setQuery(event.target.value), style: {...communityField, flex: '1 1 230px'}}),
+      communityJsx('select', {'aria-label': t('functionalFilter'), value: filter, onChange: event => setFilter(event.target.value), style: {...communityField, width: 'auto'}, children: ['all', 'visual', 'functional'].map(value => communityJsx('option', {value, style: {background: 'Canvas', color: 'CanvasText'}, children: t(value === 'all' ? 'functionalAllTypes' : value === 'visual' ? 'visualType' : 'functionalType')}, value))}),
       communityButton(t(loading ? 'communityLoading' : 'communityRefresh'), refresh, {disabled: loading}), sourceLink(`${communityHome}/issues`, t('communitySubmissions'))
     ]}),
     data ? communityJsx('p', {style: {fontSize: 12, opacity: .65}, children: t(offline ? 'communityOffline' : 'communityUpdated', {date: new Date(data.fetchedAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US'), count: data.catalog.mods.length})}) : null,
     feedback,
     ...entries.map(entry => {const mod = entry.package.mod; return communityJsxs('section', {style: communityCard, 'data-kliment-community-card': mod.id, children: [
       communityJsxs('div', {style: {display: 'flex', gap: 12, alignItems: 'center'}, children: [
-        communityJsx('div', {'aria-hidden': true, style: {width: 38, height: 38, flexShrink: 0, border: `3px solid ${mod.appearance.accent}`, background: mod.appearance.surface, borderRadius: 10}}),
-        communityJsxs('div', {style: {flex: 1, minWidth: 0}, children: [communityJsx('h3', {style: {fontSize: 15, fontWeight: 600, overflowWrap: 'anywhere'}, children: mod.name}), communityJsx('p', {style: {fontSize: 12, opacity: .65}, children: `@${entry.publisher} · v${mod.version} · ${t('visualType')}`})]}),
+        communityJsx('div', {'aria-hidden': true, style: {width: 38, height: 38, flexShrink: 0, border: `3px solid ${mod.appearance?.accent ?? '#66c4a7'}`, background: mod.appearance?.surface ?? '#25342e', borderRadius: 10, display: 'grid', placeItems: 'center'}, children: modKind(mod) === 'functional' ? '⚡' : null}),
+        communityJsxs('div', {style: {flex: 1, minWidth: 0}, children: [communityJsx('h3', {style: {fontSize: 15, fontWeight: 600, overflowWrap: 'anywhere'}, children: mod.name}), communityJsx('p', {style: {fontSize: 12, opacity: .65}, children: `@${entry.publisher} · v${mod.version} · ${t(modKind(mod) === 'functional' ? 'functionalType' : 'visualType')}`})]}),
         installed(entry) ? communityJsx('span', {style: {fontSize: 12, color: '#66c4a7'}, children: t('communityInstalled')}) : null
       ]}),
       mod.description ? communityJsx('p', {style: {fontSize: 13, opacity: .8, marginTop: 10, overflowWrap: 'anywhere'}, children: mod.description}) : null,
@@ -73,7 +75,7 @@ export function CommunityLibrary({library, readError, i18n, Dialog, Preview}) {
     selected ? communityJsx(Dialog, {title: selected.package.mod.name, t, onClose: () => {setSelected(null); setError('');}, children: communityJsxs('div', {style: {display: 'grid', gap: 14}, children: [
       communityJsx('p', {style: {fontSize: 13}, children: `@${selected.publisher} · v${selected.package.mod.version}`}),
       selected.package.mod.description ? communityJsx('p', {style: {fontSize: 13}, children: selected.package.mod.description}) : null,
-      communityJsx(Preview, {appearance: selected.package.mod.appearance, t}),
+      communityJsx(Preview, {mod: selected.package.mod, t}),
       communityJsx('p', {style: {fontSize: 12, opacity: .7}, children: t('communityInstallHint')}),
       duplicate(selected) && !installed(selected) ? communityJsx('p', {style: {fontSize: 13}, children: t('visualDuplicateHint')}) : null,
       communityButton(t(installed(selected) ? 'communityInstalled' : duplicate(selected) ? 'visualInstallCopy' : 'visualInstall'), () => install(selected), {color: 'primary', disabled: !!readError || installed(selected)}), feedback
@@ -105,7 +107,7 @@ export function CommunityPublishDialog({mod, i18n, onClose, Dialog, Preview}) {
     mod.author ? communityJsx('p', {style: {fontSize: 13}, children: `${t('visualAuthor')}: ${mod.author}`}) : null,
     mod.description ? communityJsx('p', {style: {fontSize: 13}, children: mod.description}) : null,
     communityJsx('p', {style: {fontSize: 13, opacity: .8}, children: t('communityPublishHint')}),
-    communityJsx(Preview, {appearance: mod.appearance, t}),
+    communityJsx(Preview, {mod, t}),
     receipt ? communityJsxs('div', {role: 'status', children: [communityJsx('p', {style: {fontSize: 13, marginBottom: 8}, children: t('communitySubmitted')}), sourceLink(receipt, t('communityOpenSubmission'))]}) : communityJsxs('div', {style: {display: 'grid', gap: 12}, children: [
       communityJsxs('label', {style: {display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13}, children: [communityJsx('input', {type: 'checkbox', checked: consent, disabled: busy, onChange: event => setConsent(event.target.checked), 'aria-label': t('communityConsent'), style: {appearance: 'auto', width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: '#66c4a7'}}), t('communityConsent')]}),
       communityJsx('a', {href: communitySubmissionUrl(mod), target: '_blank', rel: 'noopener noreferrer', 'aria-disabled': !consent || busy, onClick: event => {if (!consent || busy) event.preventDefault(); else openCommunityLink(event, communitySubmissionUrl(mod));}, style: {color: '#79b8ff', opacity: consent && !busy ? 1 : .4, textDecoration: 'underline', fontSize: 14}, children: t('communityPublishGithub')}),

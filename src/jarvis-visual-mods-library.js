@@ -1,5 +1,7 @@
 import {PCn as getLibraryReact, Agn as getLibraryJsx, Ck as LibraryButton, Tk as initLibraryButton, $T as LibraryToggle, QT as initLibraryToggle} from './app-shared-737655e1fb23.js';
-import {visualPresets, visualFileLimit, visualSnapshot, subscribeVisualLibrary, parseVisualLibrary, parseVisualPackage, updateVisualLibrary, announceVisualChange, exportVisualPackage, visualFilename, visualMessageStyle} from './jarvis-visual-mods-state.js';
+import {visualPresets, visualFileLimit, visualMessageStyle} from './jarvis-visual-mods-state.js';
+import {modKind, modLibrarySnapshot, subscribeModLibrary, parseModLibrary, parseModPackage, updateModLibrary, announceModChange, exportModPackage, modFilename} from './jarvis-mod-packages.js';
+import {functionalCapabilities, functionalShortcuts} from './jarvis-functional-mods-state.js';
 import {CommunityLibrary, CommunityPublishDialog} from './jarvis-community-library.js';
 initLibraryButton(); initLibraryToggle();
 const LibraryReact = getLibraryReact();
@@ -36,11 +38,26 @@ export function VisualModPreview({appearance, t}) {
   ]});
 }
 
+export function ModPackagePreview({mod, t}) {
+  if (modKind(mod) === 'visual') return libraryJsx(VisualModPreview, {appearance: mod.appearance, t});
+  return libraryJsxs('section', {style: cardStyle, 'aria-label': t('functionalReview'), children: [
+    libraryJsx('h3', {style: {fontWeight: 600}, children: t('functionalReview')}),
+    libraryJsx('p', {style: {fontSize: 13, marginTop: 8}, children: t('functionalReviewHint')}),
+    libraryJsx('ul', {style: {paddingLeft: 20, fontSize: 13, listStyle: 'disc'}, children: functionalCapabilities(mod).map(key => libraryJsx('li', {children: t(key)}, key))}),
+    ...mod.actions.map(action => libraryJsxs('div', {style: {marginTop: 12}, children: [
+      libraryJsx('strong', {style: {fontSize: 13}, children: action.label}),
+      libraryJsx('p', {style: {fontSize: 12, opacity: .7}, children: t('functionalKind_' + action.kind) + (action.shortcut ? ' · ' + action.shortcut : '')}),
+      action.text ? libraryJsx('pre', {style: {fontSize: 12, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 140, overflow: 'auto', marginTop: 6}, children: action.text}) : null,
+      action.target ? libraryJsx('p', {style: {fontSize: 12}, children: t('functionalTarget_' + action.target)}) : null
+    ]}, action.id))
+  ]});
+}
+
 export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
   const {t} = i18n;
-  const raw = LibraryReact.useSyncExternalStore(subscribeVisualLibrary, visualSnapshot, () => null);
+  const raw = LibraryReact.useSyncExternalStore(subscribeModLibrary, modLibrarySnapshot, () => '[null,null]');
   let library, readError = '';
-  try { library = parseVisualLibrary(raw); } catch { library = {mods: [], activeId: null}; readError = 'visualReadError'; }
+  try { library = parseModLibrary(raw); } catch { library = {mods: [], activeId: null, enabledIds: []}; readError = 'visualReadError'; }
   const [tab, setTab] = LibraryReact.useState('installed');
   const [draft, setDraft] = LibraryReact.useState(null);
   const [error, setError] = LibraryReact.useState('');
@@ -57,10 +74,10 @@ export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
     setError(['visualInvalidPackage', 'visualDuplicate', 'visualLimit', 'visualReadError', 'visualSaveError', 'visualFileError', 'visualCopyError', 'visualNameRequired'].includes(cause.message) ? cause.message : 'visualSaveError'); setStatus('');
   }
   function mutate(action, message) {
-    try { updateVisualLibrary(window.localStorage, action); announceVisualChange(); setError(''); setStatus(message); return true; }
+    try { updateModLibrary(window.localStorage, action); announceModChange(); setError(''); setStatus(message); return true; }
     catch (cause) { fail(cause); return false; }
   }
-  function edit(mod) { setDraft({...mod, appearance: {...mod.appearance}}); setTab('editor'); setError(''); setStatus(''); }
+  function edit(mod) { setDraft(modKind(mod) === 'functional' ? {...mod, actions: mod.actions.map(action => ({...action}))} : {...mod, appearance: {...mod.appearance}}); setTab('editor'); setError(''); setStatus(''); }
   function change(patch) { setDraft({...draft, ...patch}); setError(''); }
   function appearance(patch) { change({appearance: {...draft.appearance, ...patch}}); }
   function saveDraft(apply) {
@@ -70,7 +87,7 @@ export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
   function closeImport() { ++readSequence.current; setBusy(false); setImportOpen(false); setIncoming(null); setPackageText(''); setError(''); }
   function review(text) {
     setIncoming(null);
-    try { setIncoming(parseVisualPackage(text)); setError(''); } catch (cause) { fail(cause); }
+    try { setIncoming(parseModPackage(text)); setError(''); } catch (cause) { fail(cause); }
   }
   async function readFile(file) {
     const sequence = ++readSequence.current;
@@ -89,13 +106,13 @@ export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
     if (mutate({type: 'import', mod, apply: false}, 'visualImported')) { closeImport(); setTab('installed'); }
   }
   async function copyPackage() {
-    try { await navigator.clipboard.writeText(exportVisualPackage(exportMod)); setError(''); setStatus('visualCopied'); }
+    try { await navigator.clipboard.writeText(exportModPackage(exportMod)); setError(''); setStatus('visualCopied'); }
     catch { fail(new Error('visualCopyError')); }
   }
   function downloadPackage() {
     try {
-      const url = URL.createObjectURL(new Blob([exportVisualPackage(exportMod)], {type: 'application/json'}));
-      const anchor = document.createElement('a'); anchor.href = url; anchor.download = visualFilename(exportMod);
+      const url = URL.createObjectURL(new Blob([exportModPackage(exportMod)], {type: 'application/json'}));
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = modFilename(exportMod);
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       setError(''); setStatus('visualDownloadStarted');
@@ -121,13 +138,14 @@ export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
       libraryJsxs('div', {style: {display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center'}, children: [libraryButton(t('visualImport'), () => {setImportOpen(true); setError(''); setStatus('');}, {disabled: !!readError})]}),
       children,
       ...library.mods.map(mod => {
-        const selected = library.activeId === mod.id;
+        const functional = modKind(mod) === 'functional';
+        const selected = functional ? library.enabledIds.includes(mod.id) : library.activeId === mod.id;
         return libraryJsxs('section', {'data-kliment-visual-card': mod.id, style: cardStyle, children: [
           libraryJsxs('div', {style: {display: 'flex', alignItems: 'center', gap: 12}, children: [
-            libraryJsx('div', {'aria-hidden': true, style: {width: 36, height: 36, flexShrink: 0, background: mod.appearance.surface, border: `3px solid ${mod.appearance.accent}`, borderRadius: 10}}),
-            libraryJsxs('div', {style: {flex: 1, minWidth: 0}, children: [libraryJsx('h3', {style: {fontSize: 14, fontWeight: 600, overflowWrap: 'anywhere'}, children: mod.name}), libraryJsx('p', {style: {fontSize: 12, opacity: .65}, children: [t('visualType'), mod.author, `v${mod.version}`].filter(Boolean).join(' · ')})]}),
+            libraryJsx('div', {'aria-hidden': true, style: {width: 36, height: 36, flexShrink: 0, background: mod.appearance?.surface ?? '#25342e', border: `3px solid ${mod.appearance?.accent ?? '#66c4a7'}`, borderRadius: 10, display: 'grid', placeItems: 'center'}, children: functional ? '⚡' : null}),
+            libraryJsxs('div', {style: {flex: 1, minWidth: 0}, children: [libraryJsx('h3', {style: {fontSize: 14, fontWeight: 600, overflowWrap: 'anywhere'}, children: mod.name}), libraryJsx('p', {style: {fontSize: 12, opacity: .65}, children: [t(functional ? 'functionalType' : 'visualType'), mod.author, `v${mod.version}`].filter(Boolean).join(' · ')})]}),
             libraryJsx('span', {style: {fontSize: 12, color: selected && preferences.modsEnabled ? '#66c4a7' : 'var(--color-text-secondary)'}, children: t(!selected ? 'off' : preferences.modsEnabled ? 'on' : 'paused')}),
-            libraryJsx(LibraryToggle, {'aria-label': t('visualToggle', {name: mod.name}), checked: selected, onChange: value => mutate({type: 'activate', id: value ? mod.id : null}, 'visualSaved')})
+            libraryJsx(LibraryToggle, {'aria-label': t('visualToggle', {name: mod.name}), checked: selected, onChange: value => mutate(functional ? {type: 'activate', id: mod.id, enabled: value} : {type: 'activate', id: value ? mod.id : null}, 'visualSaved')})
           ]}),
           mod.description ? libraryJsx('p', {style: {fontSize: 13, opacity: .75, marginTop: 10, overflowWrap: 'anywhere'}, children: mod.description}) : null,
           libraryJsxs('div', {style: {display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12}, children: [libraryButton(t('visualEdit'), () => edit(mod), {'aria-label': t('visualEditNamed', {name: mod.name})}), libraryButton(t('visualExport'), () => {setExportMod(mod); setError(''); setStatus('');}, {'aria-label': t('visualExportNamed', {name: mod.name})}), libraryButton(t('communityPublish'), () => {setPublishMod(mod); setStatus('');}, {'aria-label': t('communityPublishNamed', {name: mod.name})}), libraryButton(t('remove'), () => {if (mutate({type: 'remove', id: mod.id}, 'visualRemoved')) setRemoved({mod, active: selected});}, {'aria-label': t('visualRemoveNamed', {name: mod.name})})]})
@@ -135,7 +153,23 @@ export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
       }),
       libraryJsx('p', {style: {fontSize: 12, opacity: .65}, children: t(library.mods.length ? 'visualSingleActive' : 'visualEmpty')}),
       removed ? libraryButton(t('visualUndo'), () => {if (mutate({type: 'import', mod: removed.mod, apply: removed.active}, 'visualSaved')) setRemoved(null);}) : null
-    ]}) : tab === 'community' ? libraryJsx(CommunityLibrary, {library, readError, i18n, Dialog: VisualPackageDialog, Preview: VisualModPreview}) : draft ? libraryJsxs('div', {role: 'tabpanel', 'aria-label': t('visualEditor'), style: {display: 'grid', gap: 14}, children: [
+    ]}) : tab === 'community' ? libraryJsx(CommunityLibrary, {library, readError, i18n, Dialog: VisualPackageDialog, Preview: ModPackagePreview}) : draft && modKind(draft) === 'functional' ? libraryJsxs('div', {role: 'tabpanel', 'aria-label': t('functionalSettings'), style: {display: 'grid', gap: 14}, children: [
+      libraryJsx('h3', {style: {fontWeight: 600}, children: t('visualEditNamed', {name: draft.name})}),
+      textField('visualName', draft.name, value => change({name: value}), 80),
+      textField('visualAuthor', draft.author, value => change({author: value}), 60),
+      textField('visualDescription', draft.description, value => change({description: value}), 200, true),
+      ...draft.actions.map((action, index) => {
+        const update = patch => change({actions: draft.actions.map((item, i) => i === index ? {...item, ...patch} : item)});
+        return libraryJsxs('section', {style: cardStyle, children: [
+          textField('functionalButtonLabel', action.label, value => update({label: value}), 60),
+          libraryJsx('p', {style: {fontSize: 12, margin: '8px 0', opacity: .7}, children: t('functionalKind_' + action.kind)}),
+          action.kind === 'insert-text' ? textField('functionalTemplate', action.text, value => update({text: value}), 8000, true) : null,
+          libraryJsxs('label', {style: {display: 'grid', gap: 6, fontSize: 13}, children: [t('functionalShortcut'), libraryJsx('select', {'aria-label': t('functionalShortcut') + ': ' + action.label, value: action.shortcut ?? '', onChange: event => update({shortcut: event.target.value || null}), style: fieldStyle, children: functionalShortcuts.map(value => libraryJsx('option', {value: value ?? '', style: {background: 'Canvas', color: 'CanvasText'}, children: value ?? t('none')}, value ?? 'none'))})]})
+        ]}, action.id);
+      }),
+      libraryJsx(ModPackagePreview, {mod: draft, t}),
+      libraryJsxs('div', {style: {display: 'flex', flexWrap: 'wrap', gap: 8}, children: [libraryButton(t('visualSaveApply'), () => saveDraft(true), {color: 'primary'}), libraryButton(t('save'), () => saveDraft(false)), libraryButton(t('cancel'), () => {setDraft(null); setTab('installed'); setError('');})]})
+    ]}) : draft ? libraryJsxs('div', {role: 'tabpanel', 'aria-label': t('visualEditor'), style: {display: 'grid', gap: 14}, children: [
       libraryJsx('h3', {style: {fontSize: 16, fontWeight: 600}, children: t('visualEditNamed', {name: draft.name})}),
       libraryJsxs('div', {style: {display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: 18, alignItems: 'start'}, children: [
         libraryJsxs('div', {style: {display: 'grid', gap: 12}, children: [
@@ -153,17 +187,17 @@ export function VisualModsLibrary({preferences, i18n, children, onActivity}) {
       !preferences.modsEnabled ? libraryJsx('p', {style: {fontSize: 12, opacity: .65}, children: t('visualMasterHint')}) : null
     ]}) : null,
     !importOpen && !exportMod && tab !== 'community' ? feedback : null,
-    publishMod ? libraryJsx(CommunityPublishDialog, {mod: publishMod, i18n, Dialog: VisualPackageDialog, Preview: VisualModPreview, onClose: () => setPublishMod(null)}) : null,
+    publishMod ? libraryJsx(CommunityPublishDialog, {mod: publishMod, i18n, Dialog: VisualPackageDialog, Preview: ModPackagePreview, onClose: () => setPublishMod(null)}) : null,
     importOpen ? libraryJsx(VisualPackageDialog, {title: t('visualImport'), onClose: closeImport, t, children: libraryJsxs('div', {style: {display: 'grid', gap: 14}, children: [
       libraryJsx('p', {style: {fontSize: 13, opacity: .75}, children: t('visualImportHint')}),
       libraryJsx('input', {ref: fileRef, type: 'file', accept: '.codexmod.json,.json,application/json', style: {display: 'none'}, onChange: event => {const file = event.target.files?.[0]; if (file) readFile(file); event.target.value = '';}}),
       libraryButton(t('visualChooseFile'), () => fileRef.current.click(), {disabled: busy}),
       libraryJsxs('details', {children: [libraryJsx('summary', {style: {fontSize: 13, cursor: 'pointer'}, children: t('visualPaste')}), libraryJsx('textarea', {'aria-label': t('visualPackageText'), value: packageText, maxLength: visualFileLimit, rows: 5, onChange: event => {++readSequence.current; setBusy(false); setIncoming(null); setPackageText(event.target.value); setError('');}, style: {...fieldStyle, fontFamily: 'monospace', margin: '10px 0'}}), libraryButton(t('visualReview'), () => review(packageText), {disabled: busy})]}),
-      incoming ? libraryJsxs('div', {style: {display: 'grid', gap: 12}, children: [libraryJsx('h3', {style: {fontWeight: 600}, children: incoming.name}), libraryJsx('p', {style: {fontSize: 12, opacity: .7}, children: [incoming.author, `v${incoming.version}`, t('visualType')].filter(Boolean).join(' · ')}), incoming.description ? libraryJsx('p', {children: incoming.description}) : null, libraryJsx(VisualModPreview, {appearance: incoming.appearance, t}), library.mods.some(mod => mod.id === incoming.id) ? libraryJsx('p', {style: {fontSize: 13}, children: t('visualDuplicateHint')}) : null, libraryButton(t(library.mods.some(mod => mod.id === incoming.id) ? 'visualInstallCopy' : 'visualInstall'), install, {disabled: busy || !!readError, color: 'primary'})]}) : null,
+      incoming ? libraryJsxs('div', {style: {display: 'grid', gap: 12}, children: [libraryJsx('h3', {style: {fontWeight: 600}, children: incoming.name}), libraryJsx('p', {style: {fontSize: 12, opacity: .7}, children: [incoming.author, `v${incoming.version}`, t(modKind(incoming) === 'functional' ? 'functionalType' : 'visualType')].filter(Boolean).join(' · ')}), incoming.description ? libraryJsx('p', {children: incoming.description}) : null, libraryJsx(ModPackagePreview, {mod: incoming, t}), library.mods.some(mod => mod.id === incoming.id) ? libraryJsx('p', {style: {fontSize: 13}, children: t('visualDuplicateHint')}) : null, libraryButton(t(library.mods.some(mod => mod.id === incoming.id) ? 'visualInstallCopy' : 'visualInstall'), install, {disabled: busy || !!readError, color: 'primary'})]}) : null,
       feedback
     ]})}) : null,
     exportMod ? libraryJsx(VisualPackageDialog, {title: t('visualExport'), onClose: () => {setExportMod(null); setError('');}, t, children: libraryJsxs('div', {style: {display: 'grid', gap: 14}, children: [
-      libraryJsx('h3', {style: {fontWeight: 600}, children: exportMod.name}), libraryJsx('p', {style: {fontSize: 13, opacity: .7}, children: t('visualExportHint')}), libraryJsx('code', {style: {fontSize: 12, overflowWrap: 'anywhere'}, children: visualFilename(exportMod)}), libraryJsxs('div', {style: {display: 'flex', gap: 8, flexWrap: 'wrap'}, children: [libraryButton(t('visualSaveFile'), downloadPackage, {color: 'primary'}), libraryButton(t('visualCopyPackage'), copyPackage)]}), feedback
+      libraryJsx('h3', {style: {fontWeight: 600}, children: exportMod.name}), libraryJsx('p', {style: {fontSize: 13, opacity: .7}, children: t('visualExportHint')}), libraryJsx('code', {style: {fontSize: 12, overflowWrap: 'anywhere'}, children: modFilename(exportMod)}), libraryJsxs('div', {style: {display: 'flex', gap: 8, flexWrap: 'wrap'}, children: [libraryButton(t('visualSaveFile'), downloadPackage, {color: 'primary'}), libraryButton(t('visualCopyPackage'), copyPackage)]}), feedback
     ]})}) : null
   ]});
 }

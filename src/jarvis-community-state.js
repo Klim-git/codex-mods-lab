@@ -1,8 +1,8 @@
-import {parseVisualPackage, exportVisualPackage, parseVisualLibrary, updateVisualLibrary} from './jarvis-visual-mods-state.js';
+import {parseModPackage, exportModPackage, readModLibrary, updateModLibrary, modKind} from './jarvis-mod-packages.js';
 
 export const communityRepo = 'Klim-git/codex-mods-lab';
 export const communityHome = `https://github.com/${communityRepo}`;
-export const communityCatalogUrl = `https://raw.githubusercontent.com/${communityRepo}/main/community/catalog.json`;
+export const communityCatalogUrl = `https://raw.githubusercontent.com/${communityRepo}/main/community/catalog-v2.json`;
 export const communityApi = `https://api.github.com/repos/${communityRepo}/issues`;
 export const communityCacheKey = 'kliment.mods.lab.community-cache.v1';
 export const communityLimit = 1024 * 1024;
@@ -16,18 +16,19 @@ export function parseCommunityCatalog(text) {
     if (typeof text !== 'string' || utf8.encode(text).length > communityLimit) invalid();
     const value = JSON.parse(text);
     keys(value, ['format', 'formatVersion', 'updatedAt', 'mods']);
-    if (value.format !== 'codex-mods-lab/community' || value.formatVersion !== 1 || !Array.isArray(value.mods) || value.mods.length > 200 || typeof value.updatedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(value.updatedAt) || !Number.isFinite(Date.parse(value.updatedAt))) invalid();
+    if (value.format !== 'codex-mods-lab/community' || ![1, 2].includes(value.formatVersion) || !Array.isArray(value.mods) || value.mods.length > 200 || typeof value.updatedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(value.updatedAt) || !Number.isFinite(Date.parse(value.updatedAt))) invalid();
     const ids = new Set(), issues = new Set();
     const mods = value.mods.map(entry => {
       keys(entry, ['publisher', 'issueNumber', 'package']);
       if (typeof entry.publisher !== 'string' || !/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(entry.publisher)) invalid();
       if (entry.issueNumber !== null && (!Number.isSafeInteger(entry.issueNumber) || entry.issueNumber < 1)) invalid();
-      const mod = parseVisualPackage(JSON.stringify(entry.package));
+      const mod = parseModPackage(JSON.stringify(entry.package));
+      if (value.formatVersion === 1 && modKind(mod) !== 'visual') invalid();
       if (ids.has(mod.id) || entry.issueNumber !== null && issues.has(entry.issueNumber)) invalid();
       ids.add(mod.id); if (entry.issueNumber !== null) issues.add(entry.issueNumber);
-      return {publisher: entry.publisher, issueNumber: entry.issueNumber, package: JSON.parse(exportVisualPackage(mod))};
+      return {publisher: entry.publisher, issueNumber: entry.issueNumber, package: JSON.parse(exportModPackage(mod))};
     });
-    return {format: value.format, formatVersion: 1, updatedAt: value.updatedAt, mods};
+    return {format: value.format, formatVersion: value.formatVersion, updatedAt: value.updatedAt, mods};
   } catch { invalid(); }
 }
 export function readCommunityCache(storage) {
@@ -72,20 +73,19 @@ export async function fetchCommunityCatalog(fetcher = fetch, signal) {
   finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
 }
 export function communitySource(entry) {
-  return entry.issueNumber === null ? `${communityHome}/blob/main/community/catalog.json` : `${communityHome}/issues/${entry.issueNumber}`;
+  return entry.issueNumber === null ? `${communityHome}/blob/main/community/catalog-v2.json` : `${communityHome}/issues/${entry.issueNumber}`;
 }
-export function communityMatches(mod, installed) { return exportVisualPackage(mod) === exportVisualPackage(installed); }
+export function communityMatches(mod, installed) { return exportModPackage(mod) === exportModPackage(installed); }
 export function installCommunityMod(storage, entry, newId, copySuffix) {
-  const mod = parseVisualPackage(JSON.stringify(entry.package));
+  const mod = parseModPackage(JSON.stringify(entry.package));
   // The caller provides the freshly read local library through the storage transaction.
-  const current = storage.getItem('kliment.mods.lab.visual-library.v1');
-  const duplicate = parseVisualLibrary(current).mods.some(item => item.id === mod.id);
+  const duplicate = readModLibrary(storage).mods.some(item => item.id === mod.id);
   const incoming = duplicate ? {...mod, id: newId, name: (mod.name.slice(0, 60) + ' ' + copySuffix).slice(0, 80)} : mod;
-  return updateVisualLibrary(storage, {type: 'import', mod: incoming, apply: false});
+  return updateModLibrary(storage, {type: 'import', mod: incoming, apply: false});
 }
 export function communitySubmission(mod) {
   // Canonical plain JSON only. HTML-like metadata remains text in the app and a code block on GitHub.
-  const body = `<!-- codex-mods-lab:submission:v1 -->\n\nVisual mod submission. Please review the package before adding it to the community catalog.\n\n\`\`\`json\n${exportVisualPackage(mod)}\`\`\`\n`;
+  const body = `<!-- codex-mods-lab:submission:v1 -->\n\nMod submission. Please review the package before adding it to the community catalog.\n\n\`\`\`json\n${exportModPackage(mod)}\`\`\`\n`;
   return {title: `[Mod] ${mod.name} v${mod.version}`, body};
 }
 export function communitySubmissionUrl(mod) {
@@ -96,7 +96,7 @@ export function parseCommunitySubmission(body) {
   if (typeof body !== 'string' || utf8.encode(body).length > 70000 || !body.startsWith('<!-- codex-mods-lab:submission:v1 -->')) throw new Error('visualInvalidPackage');
   const blocks = [...body.matchAll(/^```json\r?\n([\s\S]*?)^```\s*$/gm)];
   if (blocks.length !== 1) throw new Error('visualInvalidPackage');
-  return parseVisualPackage(blocks[0][1]);
+  return parseModPackage(blocks[0][1]);
 }
 export async function publishCommunityMod(mod, token, fetcher = fetch, signal) {
   const submission = communitySubmission(mod);
