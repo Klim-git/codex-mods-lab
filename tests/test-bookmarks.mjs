@@ -17,8 +17,8 @@ const React = {Fragment: 'Fragment', createContext: () => ({Provider: 'Provider'
   useState: initial => {const slot = hook++; if(!(slot in state)) state[slot] = typeof initial === 'function' ? initial() : initial; return [state[slot], value => {state[slot] = typeof value === 'function' ? value(state[slot]) : value;}];},
   useRef: initial => {const slot = hook++; if(!(slot in state)) state[slot] = {current: initial}; return state[slot];}
 };
-const c = vm.createContext({window, Event: class {constructor(type){this.type=type;}}, getReact: () => React, getJsx: () => ({jsx, jsxs:jsx}), initButton:noop, Button:'Button', console, Date});
-vm.runInContext(strip(read('jarvis-mods-state.js')) + '\n' + strip(read('jarvis-bookmarks-state.js')) + '\n' + strip(read('jarvis-bookmarks.js')) + '\nglobalThis.api={bookmarksKey,storageKey,defaults,parsePreferences,parseBookmarks,readBookmarks,changeBookmark,bookmarkItemId,messageExcerpt,matchesBookmarkShortcut,subscribeBookmarks,Surface:JarvisBookmarksSurface,Message:JarvisBookmarkMessageButton};', c);
+const c = vm.createContext({window, Event: class {constructor(type){this.type=type;}}, getReact: () => React, getLocaleReact: () => React, useAppIntl: () => ({locale: 'ru-RU'}), getJsx: () => ({jsx, jsxs:jsx}), initButton:noop, Button:'Button', console, Date});
+vm.runInContext(strip(read('jarvis-mods-state.js')) + '\n' + strip(read('jarvis-mods-i18n.js')) + '\n' + strip(read('jarvis-bookmarks-state.js')) + '\n' + strip(read('jarvis-bookmarks.js')) + '\nglobalThis.api={bookmarksKey,storageKey,defaults,parsePreferences,parseBookmarks,readBookmarks,changeBookmark,bookmarkItemId,messageExcerpt,matchesBookmarkShortcut,subscribeBookmarks,Surface:JarvisBookmarksSurface,Message:JarvisBookmarkMessageButton};', c);
 const a = c.api;
 const first = {action:'add', conversationKey:'local:host:chat-a', unitKey:'turn-a:item-a', turnKey:'turn-a', role:'user', excerpt:'Решение\n  по задаче', createdAt:123};
 a.changeBookmark(storage, first);
@@ -77,6 +77,19 @@ assert(flatten(tree).some(n=>n.props['data-kliment-bookmarks-launcher']), 'Hidin
 saved.set(a.storageKey,JSON.stringify({...a.defaults,modsEnabled:false})); tree=render();
 assert(!flatten(tree).some(n=>n.props['data-kliment-bookmarks-launcher']));
 assert.equal(tree.props.children.props.children[0], 'native transcript');
+saved.set(a.storageKey, JSON.stringify({...a.defaults, modsEnabled: true, modsLanguage: 'en'}));
+tree = render();
+message = a.Message({unitKey: first.unitKey, turnKey: first.turnKey, role: 'user', item: {message: 'text'}});
+assert.equal(flatten(message).find(n => n.type === 'Button').props['aria-label'], 'Remove message bookmark');
+assert.equal(flatten(tree).find(n => n.props['data-kliment-bookmarks-launcher']).props.children.props.title, 'Bookmarks in this chat · Ctrl+Alt+K');
+const dialog = flatten(tree).find(n => typeof n.type === 'function');
+hook = 0; state.length = 0;
+const dialogTree = dialog.type(dialog.props);
+assert.equal(dialogTree.props.lang, 'en');
+assert(flatten(dialogTree).some(n => n.props.children === 'Your message'));
+assert(flatten(dialogTree).some(n => n.props.children === 'Решение по задаче'), 'Existing bookmark titles are user content');
+assert(flatten(dialogTree).some(n => n.props.children === 'Rename'));
+assert(flatten(dialogTree).some(n => n.props.children === 'Remove'));
 
 if (process.env.CODEX_MODS_INTEGRATION === '1') {
 // Execute the actual native local-message wrapper with its original unit-key format.
