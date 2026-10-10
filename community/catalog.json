@@ -1,0 +1,73 @@
+{
+  "format": "codex-mods-lab/community",
+  "formatVersion": 1,
+  "updatedAt": "2026-10-10T18:11:55.707179Z",
+  "mods": [
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/visual",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-ocean",
+          "version": "1.0.0",
+          "name": "Ocean",
+          "author": "Mods Lab",
+          "description": "Blue accents and a dark chat surface.",
+          "appearance": {
+            "accent": "#79b8ff",
+            "surface": "#202935",
+            "fontSize": 15,
+            "cornerRadius": 16,
+            "contentWidth": 800
+          }
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/visual",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-paper",
+          "version": "1.0.0",
+          "name": "Paper",
+          "author": "Mods Lab",
+          "description": "A light paper surface with dark, readable text.",
+          "appearance": {
+            "accent": "#486ca8",
+            "surface": "#f2f0e9",
+            "fontSize": 15,
+            "cornerRadius": 16,
+            "contentWidth": 800
+          }
+        }
+      }
+    },
+    {
+      "publisher": "Klim-git",
+      "issueNumber": null,
+      "package": {
+        "format": "codex-mods-lab/visual",
+        "formatVersion": 1,
+        "mod": {
+          "id": "community-violet",
+          "version": "1.0.0",
+          "name": "Violet",
+          "author": "Mods Lab",
+          "description": "Violet accents on a dark chat surface.",
+          "appearance": {
+            "accent": "#bc9aff",
+            "surface": "#2b2435",
+            "fontSize": 15,
+            "cornerRadius": 16,
+            "contentWidth": 800
+          }
+        }
+      }
+    }
+  ]
+}
