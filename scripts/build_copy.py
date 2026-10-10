@@ -16,7 +16,12 @@ LOCAL_TURN = 'webview/assets/local-conversation-turn-dd4feee2fc9e.js'
 CHATGPT_PAGE = 'webview/assets/chatgpt-conversation-page-d6ceb517cb3b.js'
 CHATGPT_TURN = 'webview/assets/chatgpt-conversation-turn-content-dc8fb988ef91.js'
 MODULE = 'webview/assets/jarvis-mods-native.js'
-MODULES = [MODULE, 'webview/assets/jarvis-mods-state.js', 'webview/assets/jarvis-context-bar.js', 'webview/assets/jarvis-bookmarks-state.js', 'webview/assets/jarvis-bookmarks.js', 'webview/assets/jarvis-mods-i18n.js']
+MODULES = [MODULE, 'webview/assets/jarvis-mods-state.js', 'webview/assets/jarvis-context-bar.js', 'webview/assets/jarvis-bookmarks-state.js', 'webview/assets/jarvis-bookmarks.js', 'webview/assets/jarvis-mods-i18n.js', 'webview/assets/jarvis-visual-mods-state.js', 'webview/assets/jarvis-visual-mods-library.js', 'webview/assets/jarvis-visual-mods-runtime.js', 'webview/assets/jarvis-community-state.js', 'webview/assets/jarvis-community-library.js']
+
+def patch_community_csp(source):
+    # Allow only the two fixed community endpoints in the isolated copy.
+    return replace_once(source, 'connect-src &#39;self&#39; blob:',
+        'connect-src &#39;self&#39; blob: https://raw.githubusercontent.com https://api.github.com')
 
 def replace_once(source, old, new):
     if source.count(old) != 1: raise RuntimeError('Patch does not match this version: '+old[:100])
@@ -47,8 +52,8 @@ def patch_composer(source):
     return "import{JarvisContextBarRoot}from'./jarvis-context-bar.js';\n" + source[:start] + composer + source[end:]
 
 def patch_mods_rail(source):
-    source = replace_once(source, 'children:[z,B,V,H,k,A]}),t[90]', 'children:[z,B,V,H,k,A,(0,O2.jsx)(JarvisModsRailButton,{onOpenSidebarPopover:u},`kliment-mods-rail`)]}),t[90]')
-    return "import{useModsLanguage,modText}from'./jarvis-mods-i18n.js';\n" + source + '\n\n' + (ROOT/'src/jarvis-mods-rail.js').read_text(encoding='utf-8')
+    source = replace_once(source, 'children:[z,B,V,H,k,A]}),t[90]', 'children:[z,B,V,H,k,A,(0,O2.jsx)(JarvisModsRailButton,{onOpenSidebarPopover:u},`kliment-mods-rail`),(0,O2.jsx)(JarvisVisualStylesRoot,{},`kliment-visual-styles`)]}),t[90]')
+    return "import{JarvisVisualStylesRoot}from'./jarvis-visual-mods-runtime.js';\nimport{useModsLanguage,modText}from'./jarvis-mods-i18n.js';\n" + source + '\n\n' + (ROOT/'src/jarvis-mods-rail.js').read_text(encoding='utf-8')
 
 def patch_local_thread(source):
     source = replace_once(source, '"data-content-search-turn-key":s,"data-content-search-unit-key":g,children:y}', '"data-content-search-turn-key":s,"data-content-search-unit-key":g,children:[y,(0,Dk.jsx)(JarvisBookmarkMessageButton,{unitKey:g,turnKey:s,role:`assistant`,item:v},`kliment-bookmark`)]}')
@@ -61,11 +66,15 @@ def patch_local_thread(source):
         raise RuntimeError('Unexpected local thread return')
     thread = thread[:-1] + '},`local:${i}:${t}`)}'
     source = source[:start] + thread + source[end:]
+    source = replace_once(source, '"data-content-search-unit-key":g,children:[y', '"data-content-search-unit-key":g,"data-kliment-message-role":`assistant`,children:[y')
+    source = replace_once(source, '"data-content-search-unit-key":d,children:[f', '"data-content-search-unit-key":d,"data-kliment-message-role":a.role,children:[f')
     return "import{bookmarkItemId}from'./jarvis-bookmarks-state.js';\nimport{JarvisBookmarksSurface,JarvisBookmarkMessageButton,findBookmarkTarget}from'./jarvis-bookmarks.js';\n" + source
 
 def patch_local_turn(source):
     source = replace_once(source, '"data-content-search-unit-key":sr(u,r),"data-local-conversation-user-anchor":i?!0:void 0,children:n}', '"data-content-search-unit-key":sr(u,r),"data-local-conversation-user-anchor":i?!0:void 0,children:[n,(0,Z.jsx)(JarvisBookmarkMessageButton,{unitKey:sr(u,r),turnKey:u,role:t.type===`user-message`?`user`:t.type===`assistant-message`?`assistant`:null,item:t},`kliment-bookmark`)]}')
     source = replace_once(source, '"data-content-search-unit-key":i==null?void 0:sr(t,i),"data-local-conversation-user-anchor":a?!0:void 0,children:r}', '"data-content-search-unit-key":i==null?void 0:sr(t,i),"data-local-conversation-user-anchor":a?!0:void 0,children:[r,(0,$.jsx)(JarvisBookmarkMessageButton,{unitKey:i==null?null:sr(t,i),turnKey:t,role:n.type===`user-message`?`user`:n.type===`assistant-message`?`assistant`:null,item:n},`kliment-bookmark`)]}')
+    source = replace_once(source, '"data-content-search-unit-key":sr(u,r),', '"data-content-search-unit-key":sr(u,r),"data-kliment-message-role":t.type===`user-message`?`user`:t.type===`assistant-message`?`assistant`:void 0,')
+    source = replace_once(source, '"data-content-search-unit-key":i==null?void 0:sr(t,i),', '"data-content-search-unit-key":i==null?void 0:sr(t,i),"data-kliment-message-role":n.type===`user-message`?`user`:n.type===`assistant-message`?`assistant`:void 0,')
     return "import{JarvisBookmarkMessageButton}from'./jarvis-bookmarks.js';\n" + source
 
 def patch_chatgpt_page(source):
@@ -75,6 +84,8 @@ def patch_chatgpt_page(source):
 def patch_chatgpt_turn(source):
     source = replace_once(source, 'children:[null,(0,$.jsx)($.Fragment,{children:(0,$.jsx)(Dv,{...le})})]', 'children:[null,(0,$.jsx)($.Fragment,{children:(0,$.jsx)(Dv,{...le})}),(0,$.jsx)(JarvisBookmarkMessageButton,{unitKey:F,turnKey:U,role:`user`,item:E},`kliment-bookmark`)]')
     source = replace_once(source, '"data-chatgpt-search-message-ids":i,children:[o,s,p,m,S]', '"data-chatgpt-search-message-ids":i,children:[o,s,p,m,S,(0,$.jsx)(JarvisBookmarkMessageButton,{unitKey:F,turnKey:U,role:`assistant`,item:E},`kliment-bookmark`)]')
+    source = replace_once(source, '"data-content-search-unit-key":F,children:(0,$.jsxs)(Ql.Provider', '"data-content-search-unit-key":F,"data-kliment-message-role":`user`,children:(0,$.jsxs)(Ql.Provider')
+    source = replace_once(source, '"data-chatgpt-search-message-ids":i,children:', '"data-chatgpt-search-message-ids":i,"data-kliment-message-role":`assistant`,children:')
     return "import{JarvisBookmarkMessageButton}from'./jarvis-bookmarks.js';\n" + source
 
 def write_archive(original, target, changes):
@@ -163,6 +174,7 @@ def validate_paths(source, output):
 
 def prepare_changes(arc):
     patches = {
+        'webview/index.html': patch_community_csp,
         SETTINGS: patch_settings,
         INITIAL: lambda text: patch_mods_rail(patch_composer(text)),
         LOCAL_THREAD: patch_local_thread, LOCAL_TURN: patch_local_turn,
