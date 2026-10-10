@@ -9,22 +9,24 @@ import {
   computeContextUsage, contextPresentation
 } from './jarvis-mods-state.js';
 
+import {useModsI18n} from './jarvis-mods-i18n.js';
+
 initComposerScope(); initQuery(); initScope(); initTokenUsage();
 const React = getReact();
 const {jsx, jsxs} = getJsx();
-const formatTokens = value => new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0}).format(value);
 
 export function ContextBarView({info, preferences, scopeKind}) {
+  const {language, t, formatTokens} = useModsI18n();
   const usage = computeContextUsage(info);
   const view = contextPresentation(usage, preferences);
-  const label = view.known ? `Контекст: ${view.percent}% · осталось ${view.remainingPercent}%` : 'Контекст: нет данных';
+  const label = view.known ? t('contextLabel', {used: view.percent, remaining: view.remainingPercent}) : t('contextUnknown');
   const tooltip = view.known
-    ? `Использовано ${formatTokens(usage.usedTokens)} из ${formatTokens(usage.contextWindow)} токенов. Осталось ${formatTokens(usage.remainingTokens)}. По последним данным чата; после сжатия заполнение может уменьшиться.`
+    ? t('contextTooltip', {used: formatTokens(usage.usedTokens), total: formatTokens(usage.contextWindow), remaining: formatTokens(usage.remainingTokens)})
     : scopeKind === 'chatgpt' || scopeKind === 'cloud'
-      ? 'Приложение не сообщает расход контекста для этого чата.'
-      : 'Данные появятся, когда приложение сообщит расход контекста. Обычно это происходит после первого ответа.';
+      ? t('contextUnsupported')
+      : t('contextWaiting');
   return jsxs('div', {
-    'data-kliment-context-bar': '1',
+    'data-kliment-context-bar': '1', lang: language,
     'data-context-known': view.known ? 'true' : 'false',
     title: tooltip,
     style: {margin: '8px 12px 4px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5, fontSize: 12, lineHeight: '16px', color: 'var(--color-text-secondary, inherit)'},
@@ -32,7 +34,7 @@ export function ContextBarView({info, preferences, scopeKind}) {
       jsx('div', {style: {display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8}, children: jsx('span', {style: {fontVariantNumeric: 'tabular-nums'}, children: label})}),
       jsx('div', {
         role: view.known ? 'progressbar' : undefined,
-        'aria-label': 'Заполнение контекста чата',
+        'aria-label': t('contextProgress'),
         'aria-valuemin': view.known ? 0 : undefined,
         'aria-valuemax': view.known ? 100 : undefined,
         'aria-valuenow': view.known ? view.percent : undefined,
@@ -42,7 +44,7 @@ export function ContextBarView({info, preferences, scopeKind}) {
       }),
       view.warning ? jsx('div', {
         role: 'status', 'aria-live': 'polite', style: {color: view.color},
-        children: 'Контекст почти заполнен. История может быть автоматически сжата.'
+        children: t('contextAlmostFull')
       }) : null
     ]
   });
