@@ -20,11 +20,12 @@ function flatten(value) {
 }
 
 // Execute the actual patched navigation function, including its compiled memo cache.
-const cache = Array(149).fill(Symbol.for('react.memo_cache_sentinel'));
-let query = '', hooks = 0, selected = null;
+const cache = Array(150).fill(Symbol.for('react.memo_cache_sentinel'));
+let query = '', hooks = 0, selected = null, language = 'ru';
 const noop = () => {};
 const nav = {
   console, URLSearchParams, Symbol, Element: class {},
+  useModsLanguage: () => language, modText: lang => lang === 'ru' ? 'Моды' : 'Mods',
   Jr: {c: () => cache},
   Xr: {useState: () => [hooks++ === 0 ? false : query, noop]},
   Q: {jsx, jsxs: jsx, Fragment: 'Fragment'},
@@ -65,6 +66,11 @@ assert.equal(mods.props.isActive, true, 'Active state must update through the me
 query = 'моды'; tree = renderNav('kliment-mods');
 const results = flatten(tree).find(node => node.type === 'Wr').props.searchResults;
 assert(results.some(row => row.label === 'Моды' && row.path === route), 'Settings search must find Mods');
+language = 'en'; query = ''; tree = renderNav('kliment-mods');
+mods = flatten(tree).find(node => node.props?.['data-settings-panel-slug'] === 'kliment-mods');
+assert.equal(mods.props.label, 'Mods', 'Language changes must invalidate the native sidebar cache');
+query = 'mods'; tree = renderNav('kliment-mods');
+assert(flatten(tree).find(node => node.type === 'Wr').props.searchResults.some(row => row.label === 'Mods' && row.path === route));
 
 // Execute the real selection callback: General must be able to leave the Mods page.
 const callbackStart = source.indexOf('Ne=(e,r,i,a)=>{') + 3;
