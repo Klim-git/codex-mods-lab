@@ -16,22 +16,26 @@ LOCAL_TURN = 'webview/assets/local-conversation-turn-dd4feee2fc9e.js'
 CHATGPT_PAGE = 'webview/assets/chatgpt-conversation-page-d6ceb517cb3b.js'
 CHATGPT_TURN = 'webview/assets/chatgpt-conversation-turn-content-dc8fb988ef91.js'
 MODULE = 'webview/assets/jarvis-mods-native.js'
-MODULES = [MODULE, 'webview/assets/jarvis-mods-state.js', 'webview/assets/jarvis-context-bar.js', 'webview/assets/jarvis-bookmarks-state.js', 'webview/assets/jarvis-bookmarks.js']
+MODULES = [MODULE, 'webview/assets/jarvis-mods-state.js', 'webview/assets/jarvis-context-bar.js', 'webview/assets/jarvis-bookmarks-state.js', 'webview/assets/jarvis-bookmarks.js', 'webview/assets/jarvis-mods-i18n.js']
 
 def replace_once(source, old, new):
     if source.count(old) != 1: raise RuntimeError('Patch does not match this version: '+old[:100])
     return source.replace(old, new)
 
 def patch_settings(source):
-    source = replace_once(source, 'import{n as e,o as t,t as n}', "import{JarvisModsPanel}from'./jarvis-mods-native.js';\nimport{n as e,o as t,t as n}")
-    source = replace_once(source, 'let y=v,b=ne(f).kind===`local`', 'let jarvisModsActive=u.pathname===`/settings/general-settings`&&new URLSearchParams(u.search).get(`jarvis-mods`)===`1`;let y=v,b=ne(f).kind===`local`')
-    source = replace_once(source, 'let Fe;e[72]', 'if(jarvisModsActive)Pe=(0,$.jsx)(At,{title:`Моды`,children:(0,$.jsx)(JarvisModsPanel,{})});let Fe;e[72]')
+    source = replace_once(source, 'import{n as e,o as t,t as n}', "import{JarvisModsPanel}from'./jarvis-mods-native.js';\nimport{useModsLanguage,modText}from'./jarvis-mods-i18n.js';\nimport{n as e,o as t,t as n}")
+    source = replace_once(source, 'let y=v,b=ne(f).kind===`local`', 'let jarvisPanelLanguage=useModsLanguage();let jarvisModsActive=u.pathname===`/settings/general-settings`&&new URLSearchParams(u.search).get(`jarvis-mods`)===`1`;let y=v,b=ne(f).kind===`local`')
+    source = replace_once(source, 'let Fe;e[72]', 'if(jarvisModsActive)Pe=(0,$.jsx)(At,{title:modText(jarvisPanelLanguage,`mods`),children:(0,$.jsx)(JarvisModsPanel,{})});let Fe;e[72]')
     source = replace_once(source, 'let Ke=h==null?We:`plugins-settings`', 'let Ke=jarvisModsActive?`kliment-mods`:h==null?We:`plugins-settings`')
     # Use the existing plugin navigation callback so the normal pending-save guard stays active.
     anchor = '}),null]},e.key)),t[65]=Ke'
-    button = '}),e.key===`integrations`&&C?(0,Q.jsx)(vt,{"aria-label":`Моды`,label:`Моды`,icon:(0,Q.jsx)(In,{}),isActive:a===`kliment-mods`,"data-settings-panel-slug":`kliment-mods`,onClick:()=>R({kind:`plugin`,path:`/settings/general-settings?jarvis-mods=1`}),weightClassName:`font-normal`}):null]},e.key)),t[65]=Ke'
+    button = '}),e.key===`integrations`&&C?(0,Q.jsx)(vt,{"aria-label":modText(jarvisLanguage,`mods`),label:modText(jarvisLanguage,`mods`),icon:(0,Q.jsx)(In,{}),isActive:a===`kliment-mods`,"data-settings-panel-slug":`kliment-mods`,onClick:()=>R({kind:`plugin`,path:`/settings/general-settings?jarvis-mods=1`}),weightClassName:`font-normal`}):null]},e.key)),t[65]=Ke'
     source = replace_once(source, anchor, button)
-    source = replace_once(source, '...(n==null?void 0:F)?.map(Ir)??[],...b&&It(i,A)>0?', '...(n==null?void 0:F)?.map(Ir)??[],...n!=null&&N&&[`Моды`,`mods`].some(e=>It(e,A)>0)?[{id:`kliment-mods-native`,kind:`plugin`,label:`Моды`,panelLabel:`Моды`,path:`/settings/general-settings?jarvis-mods=1`,sectionSlug:`plugins-settings`}]:[],...b&&It(i,A)>0?')
+    source = replace_once(source, '...(n==null?void 0:F)?.map(Ir)??[],...b&&It(i,A)>0?', '...(n==null?void 0:F)?.map(Ir)??[],...n!=null&&N&&[`Моды`,`mods`].some(e=>It(e,A)>0)?[{id:`kliment-mods-native`,kind:`plugin`,label:modText(jarvisLanguage,`mods`),panelLabel:modText(jarvisLanguage,`mods`),path:`/settings/general-settings?jarvis-mods=1`,sectionSlug:`plugins-settings`}]:[],...b&&It(i,A)>0?')
+    # The compiled sidebar cache has no dependency on mod preferences. Reserve one
+    # slot to invalidate it when the resolved mod language changes.
+    source = replace_once(source, 'function Or(e){let t=(0,Jr.c)(149),{onSelectPlugin:n',
+        'function Or(e){let t=(0,Jr.c)(150),jarvisLanguage=useModsLanguage();if(t[149]!==jarvisLanguage){t.fill(Symbol.for(`react.memo_cache_sentinel`));t[149]=jarvisLanguage}let{onSelectPlugin:n')
     source = replace_once(source, 'if(e===x&&!l&&h==null', 'if(!jarvisModsActive&&e===x&&!l&&h==null')
     return source
 
@@ -44,7 +48,7 @@ def patch_composer(source):
 
 def patch_mods_rail(source):
     source = replace_once(source, 'children:[z,B,V,H,k,A]}),t[90]', 'children:[z,B,V,H,k,A,(0,O2.jsx)(JarvisModsRailButton,{onOpenSidebarPopover:u},`kliment-mods-rail`)]}),t[90]')
-    return source + '\n\n' + (ROOT/'src/jarvis-mods-rail.js').read_text(encoding='utf-8')
+    return "import{useModsLanguage,modText}from'./jarvis-mods-i18n.js';\n" + source + '\n\n' + (ROOT/'src/jarvis-mods-rail.js').read_text(encoding='utf-8')
 
 def patch_local_thread(source):
     source = replace_once(source, '"data-content-search-turn-key":s,"data-content-search-unit-key":g,children:y}', '"data-content-search-turn-key":s,"data-content-search-unit-key":g,children:[y,(0,Dk.jsx)(JarvisBookmarkMessageButton,{unitKey:g,turnKey:s,role:`assistant`,item:v},`kliment-bookmark`)]}')
