@@ -15,6 +15,14 @@ The repository contains our patch sources and build tools. You supply your own i
 
 The master switch starts **off**. Open Settings → **Mods** and enable it; each card has its own controls and reset button. Preferences and bookmarks are saved locally in the test copy's profile. They do not synchronize between devices.
 
+The local library adds **Installed**, package **import/export**, and per-card **appearance settings with live preview**. Your AI assistant can prepare a portable `.codexmod.json` package; import it after reviewing the preview. Each custom card offers edit, export, share and remove actions. One visual mod can be active at a time. This first format supports appearance settings only. See [local visual mods](docs/VISUAL-MODS.md) for the workflow and package specification.
+
+## Community library
+
+Open **Settings → Mods → Community library** to search, preview and install shared visual mods. The catalog is public on GitHub, so installation needs no account. Packages start disabled in **Installed**; your existing appearance is kept. A validated offline copy remains available if GitHub cannot be reached. Ocean, Paper and Violet are included as starter packages.
+
+Use **Share mod** on an installed visual mod to prepare a GitHub submission. The default route opens a ready-to-send issue in your browser; sign in and submit it there. An advanced option sends directly from the dialog using a temporary GitHub token. New submissions appear in the catalog after maintainer review. See [sharing and moderation](docs/COMMUNITY.md).
+
 ## Interface language
 
 Open **Settings → Mods → Language** and choose **Automatic (app language)**, **English**, or **Русский**. Automatic is the default: Russian app locales use Russian; all other app locales use English. An explicit choice takes effect immediately and persists after restarting the copy.
@@ -25,7 +33,21 @@ To update an existing copy, close it completely, update the repository, and reru
 
 ## Screenshots
 
-Captured from the separate Windows test copy with **English** selected for the mods. The host app is set to Russian, so its own navigation and demo message remain in Russian.
+Captured from the separate Windows test copy. The new library views below use Russian; the original context and bookmark examples use English mod labels with Russian host navigation.
+
+### Installed and community mods
+
+Custom cards include Edit, Export, Share and Remove. There is no creation button: import a package prepared by your AI assistant, or install one from the community catalog.
+
+![Installed visual mod cards with sharing and removal](docs/mods-installed.jpg)
+
+Search the public GitHub catalog, review the preview and install without signing in.
+
+![Community library with searchable visual mod cards](docs/mods-community.jpg)
+
+Sharing opens a preview and consent dialog, then a prepared GitHub submission. New submissions are reviewed before entering the catalog.
+
+![Sharing dialog with package preview and GitHub publication consent](docs/mods-share.jpg)
 
 ### Mods in Settings
 
