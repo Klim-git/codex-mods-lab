@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 
 const root = new URL('../', import.meta.url);
 const stateSource = fs.readFileSync(new URL('src/jarvis-mods-state.js', root), 'utf8').replaceAll('export ', '');
+const localeSource = fs.readFileSync(new URL('src/jarvis-mods-i18n.js', root), 'utf8').replace(/^import\s*\{[\s\S]*?\}\s*from\s*['"][^'"]+['"];\s*/gm, '').replaceAll('export ', '');
 const barSource = fs.readFileSync(new URL('src/jarvis-context-bar.js', root), 'utf8')
   .replace(/^import\s*\{[\s\S]*?\}\s*from\s*['"][^'"]+['"];\s*/gm, '').replaceAll('export ', '');
 const jsx = (type, props, key) => ({type, props: props || {}, key});
@@ -31,13 +32,14 @@ const React = {
 const ctx = vm.createContext({
   window, Intl, console, Event: class {constructor(type) {this.type = type;}},
   getReact: () => React, getJsx: () => ({jsx, jsxs: jsx}),
+  getLocaleReact: () => React, useAppIntl: () => ({locale: 'ru-RU'}),
   useScope: () => scope,
   useQuery: (actualSelector, id) => {assert.equal(actualSelector, selector); queries.push(id); return tokenByChat.get(id) ?? null;},
   ComposerScope: {}, tokenUsageInfo: selector,
   localConversationId: s => s.value.kind === 'local' ? s.value.conversationId : null,
   initComposerScope: noop, initQuery: noop, initScope: noop, initTokenUsage: noop
 });
-vm.runInContext(stateSource + '\n' + barSource + '\nglobalThis.api = {defaults, storageKey, parsePreferences, readPreferences, writePreferences, announcePreferenceChange, subscribePreferences, computeContextUsage, contextPresentation, JarvisContextBarRoot};', ctx);
+vm.runInContext(stateSource + '\n' + localeSource + '\n' + barSource + '\nglobalThis.api = {defaults, storageKey, parsePreferences, readPreferences, writePreferences, announcePreferenceChange, subscribePreferences, computeContextUsage, contextPresentation, JarvisContextBarRoot};', ctx);
 const api = ctx.api;
 
 // Real v1 preferences migrate without enabling mods behind the user's back.
@@ -115,6 +117,17 @@ assert(!text(tree).includes('сжата'));
 api.writePreferences(storage, {contextBarEnabled: false}); assert.equal(bar(), null);
 api.writePreferences(storage, {contextBarEnabled: true, modsEnabled: false}); assert.equal(bar(), null);
 api.writePreferences(storage, {modsEnabled: true}); assert.equal(api.JarvisContextBarRoot({isDocument: true}), null);
+api.writePreferences(storage, {modsLanguage: 'en'});
+scope = {value: {kind: 'local', conversationId: 'chat-b'}}; tree = bar();
+assert(text(tree).includes('Context: 95% · 5% remaining'));
+assert(text(tree).includes('Conversation history may be automatically compacted.'));
+assert(tree.props.title.includes('190,000 of 200,000 tokens used. 10,000 remaining.'));
+assert.equal(flatten(tree).find(n => n.props.role === 'progressbar').props['aria-label'], 'Chat context usage');
+scope = {value: {kind: 'chatgpt'}}; tree = bar();
+assert(text(tree).includes('Context: no data'));
+assert(tree.props.title.includes('does not report context usage'));
+api.writePreferences(storage, {modsLanguage: 'ru'}); tree = bar();
+assert(text(tree).includes('Контекст: нет данных'), 'An existing context bar must follow language changes');
 
 if (process.env.CODEX_MODS_INTEGRATION === '1') {
 // Execute the actual patched common composer with its existing memo cache.
