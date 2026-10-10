@@ -1,4 +1,4 @@
-import {PCn as getVisualReact, Agn as getVisualJsx} from './app-shared-737655e1fb23.js';
+import {getHostReact as getVisualReact, getHostJsx as getVisualJsx} from './jarvis-host-adapter.js';
 import {parsePreferences, preferenceSnapshot, subscribePreferences} from './jarvis-mods-state.js';
 import {parseVisualLibrary, visualSnapshot, subscribeVisualLibrary, visualStylesheet} from './jarvis-visual-mods-state.js';
 

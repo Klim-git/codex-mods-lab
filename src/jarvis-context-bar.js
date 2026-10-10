@@ -1,9 +1,4 @@
-import {
-  PCn as getReact, Agn as getJsx,
-  Fan as useScope, Ran as useQuery,
-  QW as ComposerScope, sG as localConversationId, OP as tokenUsageInfo,
-  uG as initComposerScope, Ian as initQuery, Pan as initScope, aP as initTokenUsage
-} from './app-shared-737655e1fb23.js';
+import {getHostReact as getReact, getHostJsx as getJsx, useHostScope as useScope, useHostQuery as useQuery, HostComposerScope as ComposerScope, hostLocalConversationId as localConversationId, hostTokenUsageInfo as tokenUsageInfo, initHostComposerScope as initComposerScope, initHostQuery as initQuery, initHostScope as initScope, initHostTokenUsage as initTokenUsage} from './jarvis-host-adapter.js';
 import {
   defaults, parsePreferences, preferenceSnapshot, subscribePreferences,
   computeContextUsage, contextPresentation

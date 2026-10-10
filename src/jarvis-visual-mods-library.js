@@ -1,4 +1,4 @@
-import {PCn as getLibraryReact, Agn as getLibraryJsx, Ck as LibraryButton, Tk as initLibraryButton, $T as LibraryToggle, QT as initLibraryToggle} from './app-shared-737655e1fb23.js';
+import {getHostReact as getLibraryReact, getHostJsx as getLibraryJsx, HostButton as LibraryButton, initHostButton as initLibraryButton, HostToggle as LibraryToggle, initHostToggle as initLibraryToggle} from './jarvis-host-adapter.js';
 import {visualPresets, visualFileLimit, visualMessageStyle} from './jarvis-visual-mods-state.js';
 import {modKind, modLibrarySnapshot, subscribeModLibrary, parseModLibrary, parseModPackage, updateModLibrary, announceModChange, exportModPackage, modFilename} from './jarvis-mod-packages.js';
 import {functionalCapabilities, functionalShortcuts} from './jarvis-functional-mods-state.js';

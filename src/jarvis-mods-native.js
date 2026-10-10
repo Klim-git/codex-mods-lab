@@ -1,10 +1,4 @@
-import {
-  PCn as getReact, Agn as getJsx,
-  $T as Toggle, QT as initToggle,
-  _S as SettingsRow, bS as initRow,
-  lS as SettingsRows, uS as initRows,
-  Ck as Button, Tk as initButton
-} from './app-shared-737655e1fb23.js';
+import {getHostReact as getReact, getHostJsx as getJsx, HostToggle as Toggle, initHostToggle as initToggle, HostSettingsRow as SettingsRow, initHostSettingsRow as initRow, HostSettingsRows as SettingsRows, initHostSettingsRows as initRows, HostButton as Button, initHostButton as initButton} from './jarvis-host-adapter.js';
 import {defaults, warningThresholds, bookmarkShortcuts, readPreferences, writePreferences, announcePreferenceChange} from './jarvis-mods-state.js';
 
 import {useModsI18n} from './jarvis-mods-i18n.js';

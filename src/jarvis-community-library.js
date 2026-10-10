@@ -1,4 +1,4 @@
-import {PCn as getCommunityReact, Agn as getCommunityJsx, Ck as CommunityButton, Tk as initCommunityButton, Nvn as CommunityHost} from './app-shared-737655e1fb23.js';
+import {getHostReact as getCommunityReact, getHostJsx as getCommunityJsx, HostButton as CommunityButton, initHostButton as initCommunityButton, HostDispatcher as CommunityHost} from './jarvis-host-adapter.js';
 import {communityHome, readCommunityCache, cacheCommunityCatalog, fetchCommunityCatalog, communitySource, communityMatches, installCommunityMod, communitySubmissionUrl, publishCommunityMod} from './jarvis-community-state.js';
 import {announceModChange, modKind} from './jarvis-mod-packages.js';
 initCommunityButton();

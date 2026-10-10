@@ -1,4 +1,4 @@
-import {PCn as getReact, Agn as getJsx, Ck as Button, Tk as initButton} from './app-shared-737655e1fb23.js';
+import {getHostReact as getReact, getHostJsx as getJsx, HostButton as Button, initHostButton as initButton} from './jarvis-host-adapter.js';
 import {defaults, parsePreferences, preferenceSnapshot, subscribePreferences} from './jarvis-mods-state.js';
 import {parseBookmarks, bookmarkSnapshot, subscribeBookmarks, changeBookmark, announceBookmarks, messageExcerpt, matchesBookmarkShortcut} from './jarvis-bookmarks-state.js';
 

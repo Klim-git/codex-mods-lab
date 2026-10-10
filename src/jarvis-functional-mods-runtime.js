@@ -1,4 +1,4 @@
-import {PCn as getFunctionalReact, Agn as getFunctionalJsx, Ck as FunctionalButton, Tk as initFunctionalButton} from './app-shared-737655e1fb23.js';
+import {getHostReact as getFunctionalReact, getHostJsx as getFunctionalJsx, HostButton as FunctionalButton, initHostButton as initFunctionalButton} from './jarvis-host-adapter.js';
 import {parsePreferences, preferenceSnapshot, subscribePreferences} from './jarvis-mods-state.js';
 import {parseFunctionalLibrary, functionalSnapshot, subscribeFunctionalLibrary, functionalShortcutMatches, validateFunctionalMod} from './jarvis-functional-mods-state.js';
 import {useModsI18n} from './jarvis-mods-i18n.js';
