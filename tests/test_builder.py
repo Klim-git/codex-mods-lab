@@ -10,6 +10,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))
 import build_copy as builder
+from adapters import select_adapter, current_adapter
 from asar_util import Asar
 
 
@@ -25,6 +26,20 @@ def make_archive(path):
 
 
 class BuilderTests(unittest.TestCase):
+    def test_adapter_requires_exact_version_and_archive(self):
+        self.assertIs(select_adapter(builder.SUPPORTED_VERSION, builder.SUPPORTED_ASAR_SHA256), current_adapter)
+        for version, digest in [('26.1007.21435', builder.SUPPORTED_ASAR_SHA256), (builder.SUPPORTED_VERSION, '0' * 64)]:
+            with self.assertRaises(RuntimeError):
+                select_adapter(version, digest)
+
+    def test_generic_modules_use_the_host_contract(self):
+        for path in (builder.ROOT / 'src').glob('*.js'):
+            if path.name != 'jarvis-host-adapter.js':
+                self.assertNotIn('app-shared-737655e1fb23.js', path.read_text(encoding='utf-8'), path.name)
+        self.assertIn('getHostReact', current_adapter.host_module_source().decode())
+        self.assertIn('.vite/build/jarvis-safe-mode-preload.cjs', builder.MODULES)
+        self.assertTrue((builder.ROOT / 'scripts/Launch-Safe-Mode.cmd').is_file())
+
     def test_community_csp_preserves_existing_restrictions(self):
         source = "default-src &#39;none&#39;; connect-src &#39;self&#39; blob: https://chatgpt.com; script-src &#39;self&#39;"
         patched = builder.patch_community_csp(source)

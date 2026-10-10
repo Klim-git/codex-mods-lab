@@ -42,7 +42,7 @@ assert.equal(a.changeBookmark(storage, {...entry, unitKey: 'turn:custom', title:
 const jsx = (type, props) => ({type, props});
 const rail = vm.createContext({URLSearchParams, useModsLanguage: () => a.useModsI18n().language, modText: a.modText,
   Pr: () => ({pathname: '/settings/general-settings', search: '?jarvis-mods=1'}), O2: {jsx, jsxs: jsx}, Pn: 'Tooltip', k0o: 'RailButton', Ho: {dispatchHostMessage() {}}});
-vm.runInContext(read('jarvis-mods-rail.js') + '\nglobalThis.render=JarvisModsRailButton;', rail);
+vm.runInContext(strip(read('jarvis-mods-rail.js')) + '\nglobalThis.render=props=>renderModsRail(props,{useModsLanguage,modText,useLocation:Pr,...O2,Tooltip:Pn,RailButton:k0o,dispatchHostMessage:message=>Ho.dispatchHostMessage(message)});', rail);
 let button = rail.render({}); assert.equal(button.props.tooltipContent, 'Mods');
 assert.equal(button.props.children.props['aria-label'], 'Mods');
 assert.equal(button.props.children.props['aria-current'], 'page');
