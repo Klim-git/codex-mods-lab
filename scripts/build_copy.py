@@ -17,6 +17,7 @@ CHATGPT_PAGE = 'webview/assets/chatgpt-conversation-page-d6ceb517cb3b.js'
 CHATGPT_TURN = 'webview/assets/chatgpt-conversation-turn-content-dc8fb988ef91.js'
 MODULE = 'webview/assets/jarvis-mods-native.js'
 MODULES = [MODULE, 'webview/assets/jarvis-mods-state.js', 'webview/assets/jarvis-context-bar.js', 'webview/assets/jarvis-bookmarks-state.js', 'webview/assets/jarvis-bookmarks.js', 'webview/assets/jarvis-mods-i18n.js', 'webview/assets/jarvis-visual-mods-state.js', 'webview/assets/jarvis-visual-mods-library.js', 'webview/assets/jarvis-visual-mods-runtime.js', 'webview/assets/jarvis-community-state.js', 'webview/assets/jarvis-community-library.js']
+MODULES += ['webview/assets/jarvis-functional-mods-state.js', 'webview/assets/jarvis-mod-packages.js', 'webview/assets/jarvis-functional-mods-runtime.js']
 
 def patch_community_csp(source):
     # Allow only the two fixed community endpoints in the isolated copy.
@@ -48,8 +49,8 @@ def patch_composer(source):
     start = source.index('function cLt(')
     end = source.index('function ', start + len('function cLt('))
     composer = source[start:end]
-    composer = replace_once(composer, 'onDrop:_,children:n}),t[20]=n', 'onDrop:_,children:[(0,ZS.jsx)(JarvisContextBarRoot,{isDocument:V},`kliment-context-bar`),n]}),t[20]=n')
-    return "import{JarvisContextBarRoot}from'./jarvis-context-bar.js';\n" + source[:start] + composer + source[end:]
+    composer = replace_once(composer, 'onDrop:_,children:n}),t[20]=n', 'onDrop:_,children:[(0,ZS.jsx)(JarvisContextBarRoot,{isDocument:V},`kliment-context-bar`),(0,ZS.jsx)(JarvisFunctionalActionsRoot,{isDocument:V},`kliment-functional-actions`),n]}),t[20]=n')
+    return "import{JarvisFunctionalActionsRoot}from'./jarvis-functional-mods-runtime.js';\nimport{JarvisContextBarRoot}from'./jarvis-context-bar.js';\n" + source[:start] + composer + source[end:]
 
 def patch_mods_rail(source):
     source = replace_once(source, 'children:[z,B,V,H,k,A]}),t[90]', 'children:[z,B,V,H,k,A,(0,O2.jsx)(JarvisModsRailButton,{onOpenSidebarPopover:u},`kliment-mods-rail`),(0,O2.jsx)(JarvisVisualStylesRoot,{},`kliment-visual-styles`)]}),t[90]')
